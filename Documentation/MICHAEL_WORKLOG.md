@@ -39,7 +39,7 @@ Each benchmark is deliberately limited to 15–90 minutes. Every item has a conc
 
 - 2026-10-25: Unity 6000.5.6f1 runtime assembly compiled with Unity's bundled Roslyn compiler, exit code 0.
 - 2026-10-25: Unity editor assembly, including `MichaelProgressionValidator`, compiled with Unity's bundled Roslyn compiler, exit code 0 and no warnings.
-- 2026-10-25: the licensed Unity Editor ran `MP2B > Validate Michael Progression` successfully: `PASS: 10/10 progression, recipe, identity, and scene checks passed`.
+- 2026-10-25: the licensed Unity Editor ran the expanded `MP2B > Validate Michael Progression` suite successfully: `PASS: 29/29 progression, resource, recipe, ritual, identity, and scene checks passed`. The suite exercises atomic duplicate-cost rejection, unchanged inventory after failed payment, resource-change events, Justin/Lucas output delivery, Convergence Alchemy unlock, complete advanced-recipe consumption, and Final Ritual readiness.
 - 2026-10-25: the licensed Unity Editor entered Play Mode and loaded the workshop scene without C# exceptions (`NullReferenceException`, `MissingReferenceException`, or related runtime script failures). OpenXR reported `XR_ERROR_RUNTIME_UNAVAILABLE` because no desktop OpenXR runtime/HMD was active, so this does not replace the Quest device test.
 - 2026-10-25: `git diff --check` passed.
 - 2026-10-25: a separate temporary Unity batch run reached `Mono: successfully reloaded assembly`, but the headless licensing client repeatedly disconnected before the validation menu could execute. This is an environment limitation rather than a compiler failure.
