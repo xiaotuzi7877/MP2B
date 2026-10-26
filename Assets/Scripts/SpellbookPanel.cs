@@ -1,0 +1,124 @@
+using UnityEngine;
+
+namespace ArcaneWorkshop
+{
+    // The floating spellbook beside the player: resources on the left page, building and recipe
+    // runes on the right page. It is the in-world replacement for the desktop side panel.
+    public sealed class SpellbookPanel : MonoBehaviour
+    {
+        private static readonly BuildingKind[] BuildOrder =
+        {
+            BuildingKind.RuneFoundation, BuildingKind.MoonPlanter, BuildingKind.ManaStill,
+            BuildingKind.StarCauldron, BuildingKind.CrystalAmplifier
+        };
+
+        private ArcaneGameManager manager;
+        private TextMesh resourceText;
+        private TextMesh feedbackText;
+        private TextMesh goalText;
+        private TextMesh trackingStatusText;
+        private WorldButton[] buildButtons;
+        private WorldButton[] recipeButtons;
+        private float refreshTimer;
+
+        public static SpellbookPanel Create(ArcaneGameManager manager, Transform anchor, Material pageMaterial, Material buttonMaterial)
+        {
+            GameObject root = new GameObject("Spellbook Panel");
+            root.transform.SetParent(anchor, false);
+            SpellbookPanel panel = root.AddComponent<SpellbookPanel>();
+            panel.manager = manager;
+            panel.Build(pageMaterial, buttonMaterial);
+            return panel;
+        }
+
+        private void Build(Material pageMaterial, Material buttonMaterial)
+        {
+            // Two open pages, 4 x 2.6 units in total.
+            CreatePage(new Vector3(-1.02f, 0f, 0.03f), pageMaterial);
+            CreatePage(new Vector3(1.02f, 0f, 0.03f), pageMaterial);
+
+            AddText("ARCANE WORKSHOP", new Vector3(-1.95f, 1.1f, 0f), 0.034f, new Color(0.55f, 0.95f, 1f));
+            resourceText = AddText("", new Vector3(-1.95f, 0.78f, 0f), 0.026f, Color.white);
+            goalText = AddText("", new Vector3(-1.95f, -0.32f, 0f), 0.022f, new Color(1f, 0.9f, 0.6f));
+            feedbackText = AddText("", new Vector3(-1.95f, -0.95f, 0f), 0.019f, new Color(0.8f, 0.85f, 1f));
+            trackingStatusText = AddText("", new Vector3(-1.95f, -1.18f, 0f), 0.017f, new Color(1f, 0.72f, 0.3f));
+
+            AddText("BUILD  (point + trigger)", new Vector3(0.1f, 1.14f, 0f), 0.022f, new Color(0.92f, 0.8f, 1f));
+            buildButtons = new WorldButton[BuildOrder.Length];
+            for (int i = 0; i < BuildOrder.Length; i++)
+            {
+                BuildingKind kind = BuildOrder[i];
+                buildButtons[i] = WorldButton.Create(transform, ArcaneGameManager.DisplayName(kind) + "  -  " + ArcaneGameManager.CostLabel(kind),
+                    new Vector3(1.02f, 0.88f - i * 0.27f, 0f), new Vector2(1.84f, 0.22f), 0.02f, buttonMaterial,
+                    () => manager.SelectBuilding(kind));
+            }
+
+            AddText("RECIPE", new Vector3(0.1f, -0.5f, 0f), 0.022f, new Color(0.92f, 0.8f, 1f));
+            BrewRecipe[] recipes = manager.Recipes;
+            recipeButtons = new WorldButton[recipes.Length];
+            for (int i = 0; i < recipes.Length; i++)
+            {
+                int index = i;
+                recipeButtons[i] = WorldButton.Create(transform, recipes[i].name + "  ->  " + recipes[i].goldReward + "g\n" + recipes[i].CostLabel(),
+                    new Vector3(1.02f, -0.76f - i * 0.25f, 0f), new Vector2(1.84f, 0.22f), 0.016f, buttonMaterial,
+                    () => manager.SelectRecipe(index));
+            }
+        }
+
+        public void SetTrackingFallback(bool active)
+        {
+            if (trackingStatusText != null)
+            {
+                trackingStatusText.text = active ? "LEFT HAND LOST - MENU PINNED TO VIEW" : "";
+            }
+        }
+
+        private void CreatePage(Vector3 localPosition, Material material)
+        {
+            GameObject page = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            page.name = "Spellbook Page";
+            Destroy(page.GetComponent<Collider>());
+            page.transform.SetParent(transform, false);
+            page.transform.localPosition = localPosition;
+            page.transform.localScale = new Vector3(2f, 2.6f, 0.04f);
+            page.GetComponent<Renderer>().sharedMaterial = material;
+        }
+
+        private TextMesh AddText(string text, Vector3 localPosition, float size, Color color)
+        {
+            GameObject textObject = new GameObject("Text");
+            textObject.transform.SetParent(transform, false);
+            textObject.transform.localPosition = localPosition + new Vector3(0f, 0f, -0.03f);
+            TextMesh mesh = textObject.AddComponent<TextMesh>();
+            mesh.text = text;
+            mesh.anchor = TextAnchor.UpperLeft;
+            mesh.fontSize = 48;
+            mesh.characterSize = size;
+            mesh.color = color;
+            WorldText.Style(mesh);
+            return mesh;
+        }
+
+        private void Update()
+        {
+            refreshTimer -= Time.unscaledDeltaTime;
+            if (refreshTimer > 0f)
+            {
+                return;
+            }
+            refreshTimer = 0.15f;
+
+            resourceText.text = manager.ResourceSummary();
+            goalText.text = manager.GoalSummary();
+            feedbackText.text = ArcaneGameManager.Wrap(manager.Feedback, 46);
+            for (int i = 0; i < buildButtons.Length; i++)
+            {
+                buildButtons[i].SetSelected(manager.Placing && manager.SelectedBuilding == BuildOrder[i]);
+            }
+            for (int i = 0; i < recipeButtons.Length; i++)
+            {
+                recipeButtons[i].SetSelected(manager.SelectedRecipe == i);
+            }
+        }
+    }
+}
