@@ -37,6 +37,7 @@ namespace ArcaneWorkshop.Editor
                 "ArcaneWorkshop scene is missing.", failures);
 
             RunManagerContractChecks(failures);
+            RunTeamExpansionChecks(failures);
 
             if (failures.Count == 0)
             {
@@ -148,6 +149,91 @@ namespace ArcaneWorkshop.Editor
                 {
                     UnityEngine.Object.DestroyImmediate(host);
                 }
+            }
+        }
+
+        private static void RunTeamExpansionChecks(List<string> failures)
+        {
+            GameObject teamRoot = GameObject.Find("MP2B Team Expansion");
+            Check(teamRoot != null, "The authored MP2B Team Expansion scene root is missing.", failures);
+            TeamExpansionStation[] authoredStations = UnityEngine.Object.FindObjectsByType<TeamExpansionStation>();
+            Check(authoredStations.Length == 3, "The main scene must contain exactly three team expansion stations.", failures);
+            bool hasConservatory = false;
+            bool hasFoundry = false;
+            bool hasNexus = false;
+            for (int i = 0; i < authoredStations.Length; i++)
+            {
+                hasConservatory |= authoredStations[i].Kind == TeamStationKind.ArcaneConservatory;
+                hasFoundry |= authoredStations[i].Kind == TeamStationKind.AstralFoundry;
+                hasNexus |= authoredStations[i].Kind == TeamStationKind.ConvergenceNexus;
+            }
+            Check(hasConservatory && hasFoundry && hasNexus,
+                "The scene must contain Conservatory, Astral Foundry, and Convergence Nexus stations.", failures);
+            Check(GameObject.Find("MP2B World Title") != null, "The visible MP2B world title is missing.", failures);
+
+            GameObject managerHost = null;
+            GameObject conservatoryHost = null;
+            GameObject foundryHost = null;
+            GameObject nexusHost = null;
+            try
+            {
+                managerHost = new GameObject("MP2B Team Loop Validation Manager");
+                managerHost.hideFlags = HideFlags.HideAndDontSave;
+                ArcaneGameManager manager = managerHost.AddComponent<ArcaneGameManager>();
+                MethodInfo awake = typeof(ArcaneGameManager).GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic);
+                if (awake != null)
+                {
+                    awake.Invoke(manager, null);
+                }
+
+                conservatoryHost = new GameObject("Conservatory Validation Station");
+                conservatoryHost.hideFlags = HideFlags.HideAndDontSave;
+                TeamExpansionStation conservatory = conservatoryHost.AddComponent<TeamExpansionStation>();
+                conservatory.Configure(TeamStationKind.ArcaneConservatory, manager, null, null, null, null);
+                for (int i = 0; i < 4; i++)
+                {
+                    conservatory.Interact(false);
+                }
+                conservatory.Interact(true);
+                conservatory.Interact(false);
+                Check(manager.GetResource(WorkshopResourceKind.ConservatoryBloom) == 2,
+                    "The Conservatory loop should harvest two Blooms after caretaking and Familiar pollination.", failures);
+
+                foundryHost = new GameObject("Foundry Validation Station");
+                foundryHost.hideFlags = HideFlags.HideAndDontSave;
+                TeamExpansionStation foundry = foundryHost.AddComponent<TeamExpansionStation>();
+                foundry.Configure(TeamStationKind.AstralFoundry, manager, null, null, null, null);
+                foundry.Interact(false);
+                foundry.Interact(false);
+                foundry.Interact(false);
+                foundry.Interact(false);
+                Check(foundry.StarFragments == 0 && manager.GetResource(WorkshopResourceKind.AstralCore) == 1,
+                    "The Foundry loop should consume two fragments and produce one Astral Core.", failures);
+                Check(manager.GetResource(WorkshopResourceKind.ConservatoryBloom) == 1,
+                    "Foundry forging should leave one harvested Bloom for Convergence Alchemy.", failures);
+                Check(manager.IsFeatureUnlocked(WorkshopUnlock.AdvancedAlchemy),
+                    "The completed Conservatory and Foundry loops should unlock Advanced Alchemy.", failures);
+
+                manager.AddResource(WorkshopResourceKind.Essence, 1);
+                nexusHost = new GameObject("Nexus Validation Station");
+                nexusHost.hideFlags = HideFlags.HideAndDontSave;
+                TeamExpansionStation nexus = nexusHost.AddComponent<TeamExpansionStation>();
+                nexus.Configure(TeamStationKind.ConvergenceNexus, manager, null, null, null, null);
+                nexus.Interact(false);
+                Check(manager.GetResource(WorkshopResourceKind.ConservatoryBloom) == 0 &&
+                      manager.GetResource(WorkshopResourceKind.AstralCore) == 0,
+                    "The Nexus should consume both team outputs for Convergence Alchemy.", failures);
+            }
+            catch (Exception exception)
+            {
+                failures.Add("Team expansion validation threw: " + exception.GetBaseException().Message);
+            }
+            finally
+            {
+                if (nexusHost != null) UnityEngine.Object.DestroyImmediate(nexusHost);
+                if (foundryHost != null) UnityEngine.Object.DestroyImmediate(foundryHost);
+                if (conservatoryHost != null) UnityEngine.Object.DestroyImmediate(conservatoryHost);
+                if (managerHost != null) UnityEngine.Object.DestroyImmediate(managerHost);
             }
         }
 

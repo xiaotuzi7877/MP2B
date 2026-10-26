@@ -4,16 +4,16 @@ Michael's progression branch exposes a small contract on `ArcaneGameManager`. Ju
 
 ## Submit teammate output
 
-Justin's Conservatory should submit its advanced crop output with:
+Justin's Conservatory submits two advanced crop outputs at harvest so one can bind the Foundry forge and one remains for the final Convergence recipe:
 
 ```csharp
 manager.RegisterTeammateOutput(
     WorkshopResourceKind.ConservatoryBloom,
-    1,
+    2,
     "Justin");
 ```
 
-Lucas's Astral Foundry should submit its forged output with:
+Lucas's Astral Foundry spends one Conservatory Bloom plus its Crystal requirement, then submits the forged output with:
 
 ```csharp
 manager.RegisterTeammateOutput(
@@ -22,7 +22,7 @@ manager.RegisterTeammateOutput(
     "Lucas");
 ```
 
-The first time both resource types are present, `AdvancedAlchemy` unlocks. The player can then select Convergence Elixir, which atomically consumes one Bloom and one Astral Core together with its basic alchemy costs.
+The first time both resource types are present, `AdvancedAlchemy` unlocks. Because the Foundry consumes only the first of Justin's two Blooms, one Bloom remains beside the new Astral Core. The player can then activate the Convergence Nexus or select Convergence Elixir, which atomically consumes those two teammate outputs together with its basic alchemy costs.
 
 ## Query or change shared resources
 
@@ -56,9 +56,9 @@ Do not depend on numeric goal indexes. Michael owns goal order and the final rit
 
 ## Integration acceptance test
 
-1. Submit one Conservatory Bloom.
+1. Harvest two Conservatory Blooms.
 2. Confirm Convergence Elixir remains locked.
-3. Submit one Astral Core.
+3. Forge one Astral Core, consuming one Bloom and leaving one Bloom available.
 4. Confirm Convergence Elixir becomes selectable in both desktop UI and the VR spellbook.
-5. Brew it and confirm both teammate resources decrease by one.
+5. Brew it at the Nexus and confirm the remaining Bloom and Astral Core both decrease by one.
 6. Confirm the `Unite the Disciplines` campaign goal completes.

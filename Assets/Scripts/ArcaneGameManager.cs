@@ -494,6 +494,20 @@ namespace ArcaneWorkshop
                 return;
             }
 
+            TeamExpansionStation teamStation = hit.collider.GetComponentInParent<TeamExpansionStation>();
+            if (teamStation != null)
+            {
+                if (secondary)
+                {
+                    teamStation.Interact(modifier);
+                }
+                else
+                {
+                    SetFeedback(teamStation.InteractionHint());
+                }
+                return;
+            }
+
             GatherableNode node = hit.collider.GetComponentInParent<GatherableNode>();
             if (node != null)
             {
@@ -1248,6 +1262,11 @@ namespace ArcaneWorkshop
             {
                 renderers.AddRange(merchantPortal.GetComponentsInChildren<Renderer>());
             }
+            GameObject teamExpansion = GameObject.Find("MP2B Team Expansion");
+            if (teamExpansion != null)
+            {
+                renderers.AddRange(teamExpansion.GetComponentsInChildren<Renderer>());
+            }
 
             foreach (Renderer blocker in renderers)
             {
@@ -1379,13 +1398,30 @@ namespace ArcaneWorkshop
             }
 
             ArcaneBuilding target = targets[Random.Range(0, targets.Count)];
+            Component impactTarget = target;
             Vector3 offset = target.Kind == BuildingKind.RuneFoundation ? Vector3.up * 0.04f : Vector3.up * 0.55f;
-            Vector3 start = target.transform.position + new Vector3(Random.Range(-5f, 5f), 11f, Random.Range(-5f, 5f));
-            ArcaneProjectile star = ArcaneProjectile.Spawn(ProjectileKind.FallingStar, start, target, offset, null, 0.22f);
+            TeamExpansionStation[] teamStations = FindObjectsByType<TeamExpansionStation>();
+            for (int i = 0; i < teamStations.Length; i++)
+            {
+                if (!teamStations[i].CanInterceptFallingStar)
+                {
+                    continue;
+                }
+                impactTarget = teamStations[i];
+                offset = Vector3.up * 1.1f;
+                SetFeedback("The Astral Foundry Shield has locked onto an incoming falling star!");
+                break;
+            }
+
+            Vector3 start = impactTarget.transform.position + new Vector3(Random.Range(-5f, 5f), 11f, Random.Range(-5f, 5f));
+            ArcaneProjectile star = ArcaneProjectile.Spawn(ProjectileKind.FallingStar, start, impactTarget, offset, null, 0.22f);
             star.GetComponent<Renderer>().sharedMaterial = starMaterial;
             AddTrail(star.gameObject, new Color(1f, 0.85f, 0.45f), 0.8f);
             ArcaneAudio.Play(SoundId.StarWhoosh, Vector3.Lerp(start, target.transform.position, 0.6f));
-            SetFeedback("A falling star streaks toward the workshop!");
+            if (impactTarget == target)
+            {
+                SetFeedback("A falling star streaks toward the workshop!");
+            }
         }
 
         private void AddTrail(GameObject owner, Color color, float time)
@@ -1482,6 +1518,59 @@ namespace ArcaneWorkshop
                 new WorkshopResourceAmount(WorkshopResourceKind.Essence, recipe.essence),
                 new WorkshopResourceAmount(WorkshopResourceKind.ConservatoryBloom, recipe.conservatoryBlooms),
                 new WorkshopResourceAmount(WorkshopResourceKind.AstralCore, recipe.astralCores));
+        }
+
+        public bool TryPerformConvergenceBrew(Vector3 position)
+        {
+            int recipeIndex = -1;
+            for (int i = 0; i < recipes.Length; i++)
+            {
+                if (recipes[i].requiredUnlock == WorkshopUnlock.AdvancedAlchemy)
+                {
+                    recipeIndex = i;
+                    break;
+                }
+            }
+
+            if (recipeIndex < 0)
+            {
+                SetFeedback("The Convergence Elixir recipe is missing.");
+                return false;
+            }
+            if (!IsRecipeUnlocked(recipeIndex))
+            {
+                SetFeedback(RecipeLockReason(recipeIndex));
+                return false;
+            }
+            if (!TryConsumeRecipe(recipeIndex))
+            {
+                SetFeedback("Convergence requires " + recipes[recipeIndex].CostLabel() + ".");
+                return false;
+            }
+
+            CompleteBrew(recipeIndex, position);
+            CheckGoals();
+            SetFeedback("Convergence Elixir completed at the Nexus. The three workshop disciplines are united.");
+            return true;
+        }
+
+        public bool IsFeatureUnlocked(WorkshopUnlock feature)
+        {
+            return progression != null && progression.IsUnlocked(feature);
+        }
+
+        public string TeamIntegrationSummary()
+        {
+            string outputs = "Bloom " + conservatoryBlooms + "   Astral Core " + astralCores;
+            if (FinalRitualReady)
+            {
+                return outputs + "\nFINAL RITUAL READY";
+            }
+            if (progression != null && progression.IsUnlocked(WorkshopUnlock.AdvancedAlchemy))
+            {
+                return outputs + "\nCONVERGENCE ALCHEMY READY";
+            }
+            return outputs + "\nDeliver both team outputs to unlock Convergence";
         }
 
         public void CompleteBrew(int recipeIndex, Vector3 position)

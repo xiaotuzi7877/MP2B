@@ -4,7 +4,7 @@ Branch: `feature/michael-progression`
 
 Owner: Michael (Ziyang Li)
 
-Scope: shared progression, alchemy integration, global UI, final ritual, and Quest-ready project integration. Justin's Conservatory implementation and Lucas's Astral Foundry implementation remain outside this branch.
+Scope: shared progression, alchemy integration, global UI, final ritual, and Quest-ready project integration. The original Michael milestones are complete. To provide an integrated team-assignment build for review, this branch now also contains reference implementations of Justin's Conservatory and Lucas's Astral Foundry; teammates can later refine those modules on their own branches.
 
 ## Benchmark plan
 
@@ -44,4 +44,7 @@ Each benchmark is deliberately limited to 15–90 minutes. Every item has a conc
 - 2026-10-25: `git diff --check` passed.
 - 2026-10-25: a separate temporary Unity batch run reached `Mono: successfully reloaded assembly`, but the headless licensing client repeatedly disconnected before the validation menu could execute. This is an environment limitation rather than a compiler failure.
 - 2026-10-25: implementation commit `ce3b860` pushed to `origin/feature/michael-progression`; `main` was not merged or modified.
-- Pending before merging into `main`: manually walk through the full staged unlock path and record a Quest device smoke test with an active OpenXR runtime/HMD.
+- 2026-10-26: authored a visibly distinct MP2B scene with three connected districts and added reference gameplay loops for the Arcane Conservatory, Astral Foundry, and Convergence Nexus.
+- 2026-10-26: the expanded Unity validation suite passed **38/38** checks, including both teammate production loops and the authored scene objects.
+- 2026-10-26: Play Mode loaded the completed scene without project-script exceptions. The desktop environment had no active OpenXR runtime/HMD, so the Quest device smoke test remains pending before merge.
+- Detailed team-level evidence and benchmark status are recorded in `Documentation/TEAM_COMPLETION_LOG.md`.

@@ -89,12 +89,14 @@ Until the core is made data-driven, teammates should integrate through small, re
 5. Assign a teammate reviewer and record approval for the collaboration rubric.
 6. Let the integration owner update the main scene after prefab review.
 
-## Next setup milestones
+## Setup milestone status
 
-1. Open the migrated project in Unity and allow a clean import.
-2. Confirm the existing scene enters Play Mode without compile errors.
-3. Run `MP2B > Configure Quest Settings`.
-4. Test the existing critical path in Editor.
-5. Create and assign the three feature branches.
-6. Implement a shared unlock/progression layer before adding large amounts of new content.
-7. Run a Quest APK smoke test before merging teammate gameplay.
+1. Complete — opened and imported the migrated project in Unity 6000.5.6f1.
+2. Complete — rebuilt the shared scene and confirmed Play Mode loads without project-script exceptions.
+3. Complete — retained the MP2B Quest/OpenXR configuration and dedicated Android package ID.
+4. Complete — exercised the progression, resource, recipe, ritual, teammate-loop, and scene critical path with a 38/38 editor validation suite.
+5. Complete — created and used Michael's isolated `feature/michael-progression` branch; `main` remains unchanged pending review.
+6. Complete — implemented the shared named-resource API, unlock layer, three team stations, and cross-team Convergence loop.
+7. Pending hardware access — install and smoke-test a Quest APK with an active Meta/OpenXR runtime before merging into `main`.
+
+The authored scene evidence is stored at `Documentation/MP2B_TEAM_PREVIEW.png`, and detailed benchmark evidence is recorded in `Documentation/TEAM_COMPLETION_LOG.md`.

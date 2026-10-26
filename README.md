@@ -2,7 +2,7 @@
 
 Shared Unity project for the CS417 MP2B/MP2C unfolding simulation.
 
-The repository begins from the stable, committed MP2A Arcane Workshop build and preserves its interaction language, visual style, OpenXR setup, materials, shaders, audio, prefabs, and working gameplay scene. MP2B will extend that foundation with staged unlocks and interconnected teammate simulations.
+The repository begins from the stable, committed MP2A Arcane Workshop build and preserves its interaction language, visual style, OpenXR setup, materials, shaders, audio, prefabs, and working gameplay scene. MP2B extends that foundation with staged unlocks and three interconnected teammate simulations.
 
 ## Team
 
@@ -34,11 +34,21 @@ The Android package ID is `com.cs417.arcaneworkshop.mp2b`, so MP2B can be instal
 - tutorial bubbles, world labels, audio feedback, seven restoration goals, and the ending celebration
 - blue/purple moon-magic materials, animated rune/flow textures, distorted brew shader, third-party environment models, and licensed audio
 
+## Implemented MP2B team expansion
+
+- Justin's **Arcane Conservatory** turns Water and Essence into plant Growth, Moisture, Fertility, Pollination, and Familiar Bond; a completed cycle produces two `ConservatoryBloom` resources.
+- Lucas's **Astral Foundry** captures Star Fragments, charges Rune Power, consumes one Bloom as an organic binder, forges an `AstralCore`, and can intercept Falling Stars with its Shield.
+- Michael's **Convergence Nexus** connects both teammate loops to Convergence Alchemy and exposes the player-triggered Final Ritual after the shared campaign is ready.
+- The main scene now includes three visibly distinct districts, a large MP2B world title, and rune paths showing the cross-team resource flow.
+- The existing mouse, controller-ray, resource, unlock, spellbook, feedback, and Quest/OpenXR systems remain the shared interaction foundation.
+
+See [`Documentation/MP2B_TEAM_PREVIEW.png`](Documentation/MP2B_TEAM_PREVIEW.png) for the authored scene overview and [`Documentation/TEAM_COMPLETION_LOG.md`](Documentation/TEAM_COMPLETION_LOG.md) for benchmark and validation evidence.
+
 ## Repository boundaries
 
 The migration intentionally excludes MP2A `Library/`, `Logs/`, `Builds/`, `UserSettings/`, videos, contribution summaries, personal assistant files, and the old repository history. The baseline was taken from the committed MP2A revision, not from uncommitted local package changes.
 
-See `Documentation/MP2B_SETUP.md` for ownership, extension points, and the next setup milestones.
+See `Documentation/MP2B_SETUP.md` for ownership, extension points, and the completed setup milestones.
 
 ## Collaboration rules
 
