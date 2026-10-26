@@ -21,7 +21,7 @@ Each benchmark is deliberately limited to 15–90 minutes. Every item has a conc
 | M-07 | Add the player-triggered final restoration ritual | 60 min | final ritual unlocks after campaign goals and ends the workshop story | Complete |
 | M-08 | Document the teammate integration contract | 30 min | example calls and resource names are recorded in project docs | Complete |
 | M-09 | Compile and run validation checks in Unity | 45 min | runtime/editor compile passes; Play Mode smoke test is recorded separately | Compile complete; Play pending |
-| M-10 | Commit and push only to Michael's remote branch | 15 min | remote branch points at the verified commit; `main` is unchanged | Ready to commit |
+| M-10 | Commit and push only to Michael's remote branch | 15 min | remote branch points at the verified commit; `main` is unchanged | Complete |
 
 ## Functional benchmarks
 
@@ -41,4 +41,5 @@ Each benchmark is deliberately limited to 15–90 minutes. Every item has a conc
 - 2026-10-25: Unity editor assembly, including `MichaelProgressionValidator`, compiled with Unity's bundled Roslyn compiler, exit code 0 and no warnings.
 - 2026-10-25: `git diff --check` passed.
 - 2026-10-25: a separate temporary Unity batch run reached `Mono: successfully reloaded assembly`, but the headless licensing client repeatedly disconnected before the validation menu could execute. This is an environment limitation rather than a compiler failure.
+- 2026-10-25: implementation commit `ce3b860` pushed to `origin/feature/michael-progression`; `main` was not merged or modified.
 - Pending in the already-open licensed Unity Editor: enter Play Mode, walk through the staged unlock path, run `MP2B > Validate Michael Progression`, and record a Quest smoke test before merging into `main`.
