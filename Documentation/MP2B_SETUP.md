@@ -51,7 +51,7 @@ The imported scene remains `Assets/Scenes/ArcaneWorkshop.unity`. Renaming or reo
 
 Until the core is made data-driven, teammates should integrate through small, reviewed additions rather than expanding the existing manager with large feature-specific switch statements.
 
-### Ziyang — shared progression and alchemy
+### Michael (Ziyang) — shared progression and alchemy
 
 - convert the seven goals into real unlock gates
 - expose shared Resource add/spend methods for teammate systems

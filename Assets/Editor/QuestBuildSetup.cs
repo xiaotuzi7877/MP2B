@@ -132,7 +132,7 @@ public static class QuestBuildSetup
     private static void ConfigurePlayer()
     {
         PlayerSettings.companyName = "CS417";
-        PlayerSettings.productName = "Arcane Workshop Reawakening";
+        PlayerSettings.productName = "MP2B - Arcane Workshop: Reawakening";
         PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.cs417.arcaneworkshop.mp2b");
         PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
         PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;

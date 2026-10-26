@@ -6,7 +6,7 @@ The repository begins from the stable, committed MP2A Arcane Workshop build and 
 
 ## Team
 
-- Ziyang Li — central alchemy workshop, shared progression, integration, and Quest build
+- Michael (Ziyang Li) — central alchemy workshop, shared progression, integration, and Quest build
 - Justin — arcane conservatory, cultivation, and familiar ecology
 - Lucas — astral foundry, rune logistics, and workshop defense
 
@@ -43,7 +43,7 @@ See `Documentation/MP2B_SETUP.md` for ownership, extension points, and the next 
 ## Collaboration rules
 
 - `main` must stay buildable.
-- Develop on `feature/ziyang-progression`, `feature/justin-conservatory`, or `feature/lucas-foundry`.
+- Develop on `feature/michael-progression`, `feature/justin-conservatory`, or `feature/lucas-foundry`.
 - Use Pull Requests and request one teammate review before merging.
 - Build features in separate test scenes and prefabs; avoid simultaneous edits to `ArcaneWorkshop.unity`.
 - Keep `.meta` files with their Unity assets.
