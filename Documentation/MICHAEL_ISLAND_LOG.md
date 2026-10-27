@@ -38,3 +38,21 @@ Reference: three-island concept image supplied on 2026-10-26.
   - the Unity import log contains no model-import or C# compilation errors for the new asset folder;
   - the original archive remains outside the repository and is not committed.
 
+### MI-02 — Triangular island shell
+
+- Status: complete
+- Date: 2026-10-26
+- Commit subject: `Build triangular Michael atelier island`
+- Work recorded:
+  - replace the circular ground and legacy three-district prototype with a Michael-only triangular floating island;
+  - add a stable spatial contract for the construction court, player spawn, future bridge gates, and central Nexus indicator;
+  - create a blue, white-stone, and gold atelier skyline from imported Kenney modules;
+  - use imported rocks and nature models to hide the minimal structural island mesh;
+  - keep custom geometry limited to the unique triangle shell, rune court, rim, and anchors.
+- Verification:
+  - Unity rebuilt and saved `Assets/Scenes/ArcaneWorkshop.unity` from the dedicated `MP2B/Rebuild Michael Island` command;
+  - the Unity Console reports zero warnings and zero errors after the rebuild;
+  - the authored Game view and `Documentation/MP2B_TEAM_PREVIEW.png` visibly show the complete triangular footprint, floating-rock underside, central construction court, and rear atelier skyline;
+  - all world-facing title text is upright and legible in the desktop preview;
+  - the two teammate gate anchors remain data-only in this milestone so their visual blockers and interactions can be independently tested in MI-03.
+
