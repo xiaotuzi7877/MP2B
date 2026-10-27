@@ -26,6 +26,7 @@ namespace ArcaneWorkshop
         private const float StationAngle = 270f;
         // The floating island has an 11 m radius; keep the head a little inside its rim.
         private const float WalkableRadius = 10.3f;
+        private const float BodyRadius = 0.22f;
         // Slower than a brisk walk: vection grows with speed and is the main cause of VR sickness.
         private const float WalkSpeed = 1.3f;
         private const float TeleportLaunchSpeed = 7f;
@@ -331,7 +332,7 @@ namespace ArcaneWorkshop
                     next = Vector3.Lerp(position, next, t);
                     points.Add(next);
                     Vector3 flat = new Vector3(next.x, 0f, next.z);
-                    teleportValid = flat.magnitude <= WalkableRadius;
+                    teleportValid = flat.magnitude <= WalkableRadius && !IsBodyBlocked(flat);
                     teleportTarget = next;
                     break;
                 }
@@ -365,8 +366,34 @@ namespace ArcaneWorkshop
             // Clamp the head rather than the rig so room-scale steps cannot carry the player off the island.
             Vector3 headFlat = new Vector3(head.position.x, 0f, head.position.z);
             Vector3 target = Vector3.ClampMagnitude(headFlat + move, WalkableRadius);
+            if (IsBodyBlocked(target))
+            {
+                // Slide along whichever axis is still free so walls and props feel solid but not sticky.
+                Vector3 slideX = Vector3.ClampMagnitude(headFlat + new Vector3(move.x, 0f, 0f), WalkableRadius);
+                Vector3 slideZ = Vector3.ClampMagnitude(headFlat + new Vector3(0f, 0f, move.z), WalkableRadius);
+                target = !IsBodyBlocked(slideX) ? slideX : !IsBodyBlocked(slideZ) ? slideZ : headFlat;
+            }
             transform.position += target - headFlat;
             return Mathf.Clamp01(stick.magnitude);
+        }
+
+        private static readonly Collider[] BodyHits = new Collider[16];
+
+        // True when a player-sized capsule standing at this floor point would overlap a solid prop.
+        private bool IsBodyBlocked(Vector3 flatPoint)
+        {
+            float floorY = transform.position.y;
+            Vector3 bottom = new Vector3(flatPoint.x, floorY + 0.45f, flatPoint.z);
+            Vector3 top = new Vector3(flatPoint.x, floorY + 1.5f, flatPoint.z);
+            int count = Physics.OverlapCapsuleNonAlloc(bottom, top, BodyRadius, BodyHits, ~0, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++)
+            {
+                if (BodyHits[i] != null && BodyHits[i].GetComponentInParent<WalkBlocker>() != null)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void UpdateLaser(Ray ray)

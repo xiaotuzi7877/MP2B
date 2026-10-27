@@ -154,26 +154,40 @@ namespace ArcaneWorkshop.Editor
 
         private static void RunTeamExpansionChecks(List<string> failures)
         {
-            GameObject teamRoot = GameObject.Find("MP2B Team Expansion");
-            Check(teamRoot != null, "The authored MP2B Team Expansion scene root is missing.", failures);
-            TeamExpansionStation[] authoredStations = UnityEngine.Object.FindObjectsByType<TeamExpansionStation>();
-            Check(authoredStations.Length == 3, "The main scene must contain exactly three team expansion stations.", failures);
-            bool hasConservatory = false;
-            bool hasFoundry = false;
-            bool hasNexus = false;
-            for (int i = 0; i < authoredStations.Length; i++)
+            Check(GameObject.Find("Michael Island Links") != null, "The Michael Island Links root (gates, receivers, altar) is missing.", failures);
+            Check(GameObject.Find("MP2B Team Expansion") == null, "Placeholder teammate districts must not sit on Michael Island.", failures);
+            TeamExpansionStation[] stations = UnityEngine.Object.FindObjectsByType<TeamExpansionStation>();
+            Check(stations.Length == 1 && stations[0].Kind == TeamStationKind.ConvergenceNexus,
+                "Michael Island must contain exactly one station: the Convergence Altar.", failures);
+
+            IslandLinkGate[] gates = UnityEngine.Object.FindObjectsByType<IslandLinkGate>();
+            bool lucasGate = false;
+            bool justinGate = false;
+            for (int i = 0; i < gates.Length; i++)
             {
-                hasConservatory |= authoredStations[i].Kind == TeamStationKind.ArcaneConservatory;
-                hasFoundry |= authoredStations[i].Kind == TeamStationKind.AstralFoundry;
-                hasNexus |= authoredStations[i].Kind == TeamStationKind.ConvergenceNexus;
+                lucasGate |= gates[i].Owner == "Lucas";
+                justinGate |= gates[i].Owner == "Justin";
+                Check(gates[i].GetComponent<WalkBlocker>() != null && gates[i].GetComponent<Collider>() != null,
+                    gates[i].Owner + "'s bridge gate needs a solid safety barrier.", failures);
             }
-            Check(hasConservatory && hasFoundry && hasNexus,
-                "The scene must contain Conservatory, Astral Foundry, and Convergence Nexus stations.", failures);
-            Check(GameObject.Find("MP2B World Title") != null, "The visible MP2B world title is missing.", failures);
+            Check(gates.Length == 2 && lucasGate && justinGate, "Michael Island needs exactly two bridge gates: Lucas and Justin.", failures);
+
+            TeammateDeliveryReceiver[] receivers = UnityEngine.Object.FindObjectsByType<TeammateDeliveryReceiver>();
+            bool bloomReceiver = false;
+            bool coreReceiver = false;
+            for (int i = 0; i < receivers.Length; i++)
+            {
+                bloomReceiver |= receivers[i].AcceptedResource == WorkshopResourceKind.ConservatoryBloom && receivers[i].ExpectedSource == "Lucas";
+                coreReceiver |= receivers[i].AcceptedResource == WorkshopResourceKind.AstralCore && receivers[i].ExpectedSource == "Justin";
+                Check(receivers[i].PayloadAnchor != null, "Every receiver needs a delivered-model anchor.", failures);
+            }
+            Check(receivers.Length == 2 && bloomReceiver && coreReceiver,
+                "Receivers must accept Lucas's Bloom and Justin's Astral Core.", failures);
+            Check(UnityEngine.Object.FindAnyObjectByType<FinalRitualIndicator>() != null, "The floating Nexus Core is missing.", failures);
+            Check(GameObject.Find("Workshop Title Plaque") != null, "The visible workshop title plaque is missing.", failures);
 
             GameObject managerHost = null;
-            GameObject conservatoryHost = null;
-            GameObject foundryHost = null;
+            GameObject receiverHost = null;
             GameObject nexusHost = null;
             try
             {
@@ -186,43 +200,31 @@ namespace ArcaneWorkshop.Editor
                     awake.Invoke(manager, null);
                 }
 
-                conservatoryHost = new GameObject("Conservatory Validation Station");
-                conservatoryHost.hideFlags = HideFlags.HideAndDontSave;
-                TeamExpansionStation conservatory = conservatoryHost.AddComponent<TeamExpansionStation>();
-                conservatory.Configure(TeamStationKind.ArcaneConservatory, manager, null, null, null, null);
-                for (int i = 0; i < 4; i++)
-                {
-                    conservatory.Interact(false);
-                }
-                conservatory.Interact(true);
-                conservatory.Interact(false);
-                Check(manager.GetResource(WorkshopResourceKind.ConservatoryBloom) == 2,
-                    "The Conservatory loop should harvest two Blooms after caretaking and Familiar pollination.", failures);
-
-                foundryHost = new GameObject("Foundry Validation Station");
-                foundryHost.hideFlags = HideFlags.HideAndDontSave;
-                TeamExpansionStation foundry = foundryHost.AddComponent<TeamExpansionStation>();
-                foundry.Configure(TeamStationKind.AstralFoundry, manager, null, null, null, null);
-                foundry.Interact(false);
-                foundry.Interact(false);
-                foundry.Interact(false);
-                foundry.Interact(false);
-                Check(foundry.StarFragments == 0 && manager.GetResource(WorkshopResourceKind.AstralCore) == 1,
-                    "The Foundry loop should consume two fragments and produce one Astral Core.", failures);
-                Check(manager.GetResource(WorkshopResourceKind.ConservatoryBloom) == 1,
-                    "Foundry forging should leave one harvested Bloom for Convergence Alchemy.", failures);
+                receiverHost = new GameObject("Receiver Validation");
+                receiverHost.hideFlags = HideFlags.HideAndDontSave;
+                TeammateDeliveryReceiver bloom = receiverHost.AddComponent<TeammateDeliveryReceiver>();
+                bloom.Configure(WorkshopResourceKind.ConservatoryBloom, "Lucas", null, null, manager, null, null, null, null, null);
+                Check(!bloom.Receive(1, "Justin's island"), "A receiver must reject deliveries from the wrong teammate.", failures);
+                Check(!bloom.Receive(0, "Lucas's island"), "A receiver must reject empty deliveries.", failures);
+                Check(bloom.Receive(1, "Lucas's island") && manager.GetResource(WorkshopResourceKind.ConservatoryBloom) == 1,
+                    "Lucas's Bloom delivery should reach the shared inventory.", failures);
+                Check(manager.TeammateDeliveries(WorkshopResourceKind.ConservatoryBloom) == 1,
+                    "Bloom deliveries should be counted (they awaken Justin's gate).", failures);
+                manager.RegisterTeammateOutput(WorkshopResourceKind.AstralCore, 1, "Justin's island");
                 Check(manager.IsFeatureUnlocked(WorkshopUnlock.AdvancedAlchemy),
-                    "The completed Conservatory and Foundry loops should unlock Advanced Alchemy.", failures);
+                    "A Bloom plus an Astral Core should unlock Advanced Alchemy.", failures);
 
+                manager.AddResource(WorkshopResourceKind.MoonHerb, 1);
+                manager.AddResource(WorkshopResourceKind.Crystal, 1);
                 manager.AddResource(WorkshopResourceKind.Essence, 1);
-                nexusHost = new GameObject("Nexus Validation Station");
+                nexusHost = new GameObject("Altar Validation Station");
                 nexusHost.hideFlags = HideFlags.HideAndDontSave;
-                TeamExpansionStation nexus = nexusHost.AddComponent<TeamExpansionStation>();
-                nexus.Configure(TeamStationKind.ConvergenceNexus, manager, null, null, null, null);
-                nexus.Interact(false);
+                TeamExpansionStation altar = nexusHost.AddComponent<TeamExpansionStation>();
+                altar.Configure(TeamStationKind.ConvergenceNexus, manager, null, null, null, null);
+                altar.Interact(false);
                 Check(manager.GetResource(WorkshopResourceKind.ConservatoryBloom) == 0 &&
                       manager.GetResource(WorkshopResourceKind.AstralCore) == 0,
-                    "The Nexus should consume both team outputs for Convergence Alchemy.", failures);
+                    "The Convergence Altar should consume both teammate resources.", failures);
             }
             catch (Exception exception)
             {
@@ -231,8 +233,7 @@ namespace ArcaneWorkshop.Editor
             finally
             {
                 if (nexusHost != null) UnityEngine.Object.DestroyImmediate(nexusHost);
-                if (foundryHost != null) UnityEngine.Object.DestroyImmediate(foundryHost);
-                if (conservatoryHost != null) UnityEngine.Object.DestroyImmediate(conservatoryHost);
+                if (receiverHost != null) UnityEngine.Object.DestroyImmediate(receiverHost);
                 if (managerHost != null) UnityEngine.Object.DestroyImmediate(managerHost);
             }
         }

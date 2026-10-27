@@ -57,6 +57,8 @@ namespace ArcaneWorkshop
 
         private Goal[] goals;
         private int goalIndex;
+        private int bloomsDelivered;
+        private int coresDelivered;
         private float goalTimer;
         private bool workshopRestored;
         private bool anyLinkEver;
@@ -110,6 +112,15 @@ namespace ArcaneWorkshop
         public BrewRecipe[] Recipes { get { return recipes; } }
         public string Feedback { get { return feedback; } }
         public bool FinalRitualReady { get { return progression != null && progression.IsUnlocked(WorkshopUnlock.FinalRitual); } }
+        public bool WorkshopRestored { get { return workshopRestored; } }
+        public int CompletedGoalCount { get { return goalIndex; } }
+        public Material MoteMaterial { get { return moteMaterial; } }
+
+        public int TeammateDeliveries(WorkshopResourceKind kind)
+        {
+            return kind == WorkshopResourceKind.ConservatoryBloom ? bloomsDelivered
+                : kind == WorkshopResourceKind.AstralCore ? coresDelivered : 0;
+        }
 
         // Set by the VR rig: when true, the desktop mouse no longer drives the pointer.
         public bool ExternalPointerActive { get; set; }
@@ -494,10 +505,31 @@ namespace ArcaneWorkshop
                 return;
             }
 
+            IslandLinkGate linkGate = hit.collider.GetComponentInParent<IslandLinkGate>();
+            if (linkGate != null)
+            {
+                linkGate.Interact(this);
+                return;
+            }
+
+            TeammateDeliveryReceiver receiver = hit.collider.GetComponentInParent<TeammateDeliveryReceiver>();
+            if (receiver != null)
+            {
+                receiver.Interact(this);
+                return;
+            }
+
+            FinalRitualIndicator nexusCore = hit.collider.GetComponentInParent<FinalRitualIndicator>();
+            if (nexusCore != null)
+            {
+                nexusCore.Interact(this);
+                return;
+            }
+
             TeamExpansionStation teamStation = hit.collider.GetComponentInParent<TeamExpansionStation>();
             if (teamStation != null)
             {
-                if (secondary)
+                if (secondary || teamStation.Kind == TeamStationKind.ConvergenceNexus)
                 {
                     teamStation.Interact(modifier);
                 }
@@ -826,7 +858,7 @@ namespace ArcaneWorkshop
                 new Goal { title = "First Brew", hint = "Build a Star Cauldron and brew any basic recipe.", isDone = () => potionsBrewed > 0, unlock = WorkshopUnlock.CrystalAmplifier },
                 new Goal { title = "Open Trade", hint = "Sell a Potion at the Merchant Gate.", isDone = () => potionsSold > 0, unlock = WorkshopUnlock.None },
                 new Goal { title = "Complete the Chain", hint = "Own a Planter, Still, Amplifier and Cauldron at the same time.", isDone = HasFullChain, unlock = WorkshopUnlock.None },
-                new Goal { title = "Unite the Disciplines", hint = "Brew a Convergence Elixir with Justin's Bloom and Lucas's Astral Core.", isDone = () => advancedPotionsBrewed > 0, unlock = WorkshopUnlock.None },
+                new Goal { title = "Unite the Disciplines", hint = "Brew a Convergence Elixir with Lucas's Bloom and Justin's Astral Core.", isDone = () => advancedPotionsBrewed > 0, unlock = WorkshopUnlock.None },
                 new Goal { title = "Master Alchemist", hint = "Earn 100 Gold from potion sales.", isDone = () => lifetimeSales >= 100, unlock = WorkshopUnlock.FinalRitual }
             };
         }
@@ -1267,6 +1299,11 @@ namespace ArcaneWorkshop
             {
                 renderers.AddRange(teamExpansion.GetComponentsInChildren<Renderer>());
             }
+            GameObject islandLinks = GameObject.Find("Michael Island Links");
+            if (islandLinks != null)
+            {
+                renderers.AddRange(islandLinks.GetComponentsInChildren<Renderer>());
+            }
 
             foreach (Renderer blocker in renderers)
             {
@@ -1299,6 +1336,11 @@ namespace ArcaneWorkshop
         private bool IsSpawnPointFree(Vector3 position)
         {
             const float clearance = 0.7f;
+            // Keep both bridge-gate corridors (west and east rim) clear for walking and trade crates.
+            if (Mathf.Abs(position.z) < 3.6f && Mathf.Abs(position.x) > 5.6f)
+            {
+                return false;
+            }
             // The VR station ring (radius 7.5) lies inside the wild spawn ring, so keep the player's feet clear.
             if (vrRig != null && vrRig.Head != null)
             {
@@ -1550,7 +1592,7 @@ namespace ArcaneWorkshop
 
             CompleteBrew(recipeIndex, position);
             CheckGoals();
-            SetFeedback("Convergence Elixir completed at the Nexus. The three workshop disciplines are united.");
+            SetFeedback("Convergence Elixir completed at the Convergence Altar. The three workshop disciplines are united.");
             return true;
         }
 
@@ -1694,6 +1736,14 @@ namespace ArcaneWorkshop
                 return false;
             }
 
+            if (kind == WorkshopResourceKind.ConservatoryBloom)
+            {
+                bloomsDelivered += amount;
+            }
+            else
+            {
+                coresDelivered += amount;
+            }
             AddResource(kind, amount);
             SetFeedback((string.IsNullOrWhiteSpace(sourceMember) ? "A teammate" : sourceMember) + " delivered " + amount + " " +
                 WorkshopProgression.ResourceDisplayName(kind) + (amount == 1 ? "." : "s."));
@@ -1729,7 +1779,7 @@ namespace ArcaneWorkshop
             if (progression.Unlock(WorkshopUnlock.AdvancedAlchemy))
             {
                 ArcaneAudio.Play2D(SoundId.GoalComplete);
-                SetFeedback("Convergence Alchemy unlocked: Justin's Bloom and Lucas's Astral Core now form an advanced recipe.");
+                SetFeedback("Convergence Alchemy unlocked: Lucas's Bloom and Justin's Astral Core now form an advanced recipe.");
             }
         }
 
