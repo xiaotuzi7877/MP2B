@@ -26,6 +26,10 @@ namespace ArcaneWorkshop
         [SerializeField] private int potions;
         [SerializeField] private int gold = 35;
 
+        [Header("Cross-Team Resources")]
+        [SerializeField] private int conservatoryBlooms;
+        [SerializeField] private int astralCores;
+
         [Header("Grid")]
         [SerializeField] private int gridSize = 7;
         [SerializeField] private float cellSize = 1.28f;
@@ -34,7 +38,8 @@ namespace ArcaneWorkshop
         {
             new BrewRecipe("Moonlight Draught", 2, 0, 1, 0, 7),
             new BrewRecipe("Starlight Tonic", 1, 2, 0, 0, 11),
-            new BrewRecipe("Verdant Elixir", 3, 0, 1, 1, 15)
+            new BrewRecipe("Verdant Elixir", 3, 0, 1, 1, 15),
+            new BrewRecipe("Convergence Elixir", 1, 1, 0, 1, 1, 1, 30, WorkshopUnlock.AdvancedAlchemy)
         };
 
         private readonly HashSet<string> shownTutorials = new HashSet<string>();
@@ -47,6 +52,7 @@ namespace ArcaneWorkshop
             public string title;
             public string hint;
             public System.Func<bool> isDone;
+            public WorkshopUnlock unlock;
         }
 
         private Goal[] goals;
@@ -55,6 +61,7 @@ namespace ArcaneWorkshop
         private bool workshopRestored;
         private bool anyLinkEver;
         private int potionsBrewed;
+        private int advancedPotionsBrewed;
         private int potionsSold;
         private int lifetimeSales;
         private float sessionStart;
@@ -93,12 +100,16 @@ namespace ArcaneWorkshop
         private GUIStyle titleStyle;
         private GUIStyle smallStyle;
         private GUIStyle resourceStyle;
+        private WorkshopProgression progression;
+
+        public event System.Action<WorkshopResourceKind, int, int> ResourceChanged;
 
         public int SelectedRecipe { get { return selectedRecipe; } }
         public BuildingKind SelectedBuilding { get { return selectedBuilding; } }
         public bool Placing { get { return placing; } }
         public BrewRecipe[] Recipes { get { return recipes; } }
         public string Feedback { get { return feedback; } }
+        public bool FinalRitualReady { get { return progression != null && progression.IsUnlocked(WorkshopUnlock.FinalRitual); } }
 
         // Set by the VR rig: when true, the desktop mouse no longer drives the pointer.
         public bool ExternalPointerActive { get; set; }
@@ -121,6 +132,7 @@ namespace ArcaneWorkshop
         {
             WorldText.Font = worldFont;
             WorldText.Material = worldTextMaterial;
+            progression = new WorkshopProgression();
         }
 
         private void Start()
@@ -374,6 +386,13 @@ namespace ArcaneWorkshop
 
         public void SelectBuilding(BuildingKind kind)
         {
+            if (!IsBuildingUnlocked(kind))
+            {
+                ArcaneAudio.Play2D(SoundId.UiError);
+                SetFeedback(DisplayName(kind) + " is locked. Complete the current restoration goal first.");
+                return;
+            }
+
             if (placing && selectedBuilding == kind)
             {
                 placing = false;
@@ -475,6 +494,20 @@ namespace ArcaneWorkshop
                 return;
             }
 
+            TeamExpansionStation teamStation = hit.collider.GetComponentInParent<TeamExpansionStation>();
+            if (teamStation != null)
+            {
+                if (secondary)
+                {
+                    teamStation.Interact(modifier);
+                }
+                else
+                {
+                    SetFeedback(teamStation.InteractionHint());
+                }
+                return;
+            }
+
             GatherableNode node = hit.collider.GetComponentInParent<GatherableNode>();
             if (node != null)
             {
@@ -535,9 +568,55 @@ namespace ArcaneWorkshop
 
         public void SelectRecipe(int index)
         {
-            selectedRecipe = Mathf.Clamp(index, 0, recipes.Length - 1);
+            index = Mathf.Clamp(index, 0, recipes.Length - 1);
+            if (!IsRecipeUnlocked(index))
+            {
+                ArcaneAudio.Play2D(SoundId.UiError);
+                SetFeedback(RecipeLockReason(index));
+                return;
+            }
+
+            selectedRecipe = index;
             ArcaneAudio.Play2D(SoundId.UiSelect);
             SetFeedback("Selected recipe: " + recipes[selectedRecipe].name + ". Use a Star Cauldron to brew.");
+        }
+
+        public bool IsBuildingUnlocked(BuildingKind kind)
+        {
+            if (progression == null)
+            {
+                return kind == BuildingKind.RuneFoundation;
+            }
+
+            switch (kind)
+            {
+                case BuildingKind.RuneFoundation: return progression.IsUnlocked(WorkshopUnlock.RuneFoundation);
+                case BuildingKind.MoonPlanter: return progression.IsUnlocked(WorkshopUnlock.MoonPlanter);
+                case BuildingKind.ManaStill: return progression.IsUnlocked(WorkshopUnlock.ManaStill);
+                case BuildingKind.StarCauldron: return progression.IsUnlocked(WorkshopUnlock.StarCauldron);
+                case BuildingKind.CrystalAmplifier: return progression.IsUnlocked(WorkshopUnlock.CrystalAmplifier);
+                default: return false;
+            }
+        }
+
+        public bool IsRecipeUnlocked(int index)
+        {
+            return index >= 0 && index < recipes.Length && progression != null && progression.IsUnlocked(recipes[index].requiredUnlock);
+        }
+
+        public string RecipeLockReason(int index)
+        {
+            if (index < 0 || index >= recipes.Length)
+            {
+                return "Unknown recipe.";
+            }
+
+            if (recipes[index].requiredUnlock == WorkshopUnlock.AdvancedAlchemy)
+            {
+                return "Convergence Alchemy is locked. Deliver one Conservatory Bloom and one Astral Core to the shared inventory.";
+            }
+
+            return recipes[index].name + " is locked by workshop progression.";
         }
 
         private void StartVR()
@@ -714,7 +793,8 @@ namespace ArcaneWorkshop
         public string ResourceSummary()
         {
             return "Moon Herbs  " + herbs + "\nCrystals    " + crystals + "\nWater       " + water +
-                "\nEssence     " + essence + "\nPotions     " + potions + "\nGold        " + gold;
+                "\nEssence     " + essence + "\nPotions     " + potions + "\nGold        " + gold +
+                "\nC. Blooms   " + conservatoryBlooms + "\nAstral Cores " + astralCores;
         }
 
         public string GoalSummary()
@@ -727,6 +807,10 @@ namespace ArcaneWorkshop
             {
                 return "WORKSHOP RESTORED!\nKeep brewing - the merchant\nis always buying.";
             }
+            if (goalIndex >= goals.Length)
+            {
+                return "ALL GOALS COMPLETE\nBegin the Final Ritual\n(25 Gold + 2 Essence).";
+            }
             Goal goal = goals[goalIndex];
             return "GOAL " + (goalIndex + 1) + "/" + goals.Length + ": " + goal.title + "\n" + Wrap(goal.hint, 34);
         }
@@ -736,38 +820,48 @@ namespace ArcaneWorkshop
             sessionStart = Time.time;
             goals = new[]
             {
-                new Goal { title = "Lay the First Rune", hint = "Build a Rune Foundation on the grid.", isDone = () => CountBuildings(BuildingKind.RuneFoundation) > 0 },
-                new Goal { title = "Awaken the Garden", hint = "Build a Moon Planter on a foundation.", isDone = () => CountBuildings(BuildingKind.MoonPlanter) > 0 },
-                new Goal { title = "Kindle a Mana Link", hint = "Place a Mana Still right next to your planter.", isDone = () => anyLinkEver },
-                new Goal { title = "First Brew", hint = "Build a Star Cauldron and brew any recipe.", isDone = () => potionsBrewed > 0 },
-                new Goal { title = "Open Trade", hint = "Sell a Potion at the Merchant Gate.", isDone = () => potionsSold > 0 },
-                new Goal { title = "Complete the Chain", hint = "Own a Planter, Still, Amplifier and Cauldron at the same time.", isDone = HasFullChain },
-                new Goal { title = "Master Alchemist", hint = "Earn 100 Gold from potion sales.", isDone = () => lifetimeSales >= 100 }
+                new Goal { title = "Lay the First Rune", hint = "Build a Rune Foundation on the grid.", isDone = () => CountBuildings(BuildingKind.RuneFoundation) > 0, unlock = WorkshopUnlock.MoonPlanter },
+                new Goal { title = "Awaken the Garden", hint = "Build a Moon Planter on a foundation.", isDone = () => CountBuildings(BuildingKind.MoonPlanter) > 0, unlock = WorkshopUnlock.ManaStill },
+                new Goal { title = "Kindle a Mana Link", hint = "Place a Mana Still right next to your planter.", isDone = () => anyLinkEver, unlock = WorkshopUnlock.StarCauldron },
+                new Goal { title = "First Brew", hint = "Build a Star Cauldron and brew any basic recipe.", isDone = () => potionsBrewed > 0, unlock = WorkshopUnlock.CrystalAmplifier },
+                new Goal { title = "Open Trade", hint = "Sell a Potion at the Merchant Gate.", isDone = () => potionsSold > 0, unlock = WorkshopUnlock.None },
+                new Goal { title = "Complete the Chain", hint = "Own a Planter, Still, Amplifier and Cauldron at the same time.", isDone = HasFullChain, unlock = WorkshopUnlock.None },
+                new Goal { title = "Unite the Disciplines", hint = "Brew a Convergence Elixir with Justin's Bloom and Lucas's Astral Core.", isDone = () => advancedPotionsBrewed > 0, unlock = WorkshopUnlock.None },
+                new Goal { title = "Master Alchemist", hint = "Earn 100 Gold from potion sales.", isDone = () => lifetimeSales >= 100, unlock = WorkshopUnlock.FinalRitual }
             };
         }
 
         private void CheckGoals()
         {
-            if (goals == null || workshopRestored)
+            if (goals == null || workshopRestored || goalIndex >= goals.Length)
             {
                 return;
             }
 
             while (goalIndex < goals.Length && goals[goalIndex].isDone())
             {
-                gold += 5;
+                AddResource(WorkshopResourceKind.Gold, 5);
                 ArcaneAudio.Play2D(SoundId.GoalComplete);
                 SetFeedback("Goal complete: " + goals[goalIndex].title + "! (+5 Gold)");
                 CelebrationSpark.Burst(new Vector3(0f, 1.5f, 0f), 12, moteMaterial);
+                UnlockFeature(goals[goalIndex].unlock);
                 goalIndex++;
             }
 
             if (goalIndex >= goals.Length)
             {
-                goalIndex = goals.Length - 1;
-                workshopRestored = true;
-                TriggerEnding();
+                SetFeedback("All restoration goals complete. Begin the Final Ritual when you have 25 Gold and 2 Essence.");
             }
+        }
+
+        private void UnlockFeature(WorkshopUnlock feature)
+        {
+            if (progression == null || !progression.Unlock(feature))
+            {
+                return;
+            }
+
+            SetFeedback("Unlocked: " + WorkshopProgression.DisplayName(feature) + ".");
         }
 
         private int CountBuildings(BuildingKind kind)
@@ -791,6 +885,49 @@ namespace ArcaneWorkshop
         {
             return CountBuildings(BuildingKind.MoonPlanter) > 0 && CountBuildings(BuildingKind.ManaStill) > 0 &&
                 CountBuildings(BuildingKind.CrystalAmplifier) > 0 && CountBuildings(BuildingKind.StarCauldron) > 0;
+        }
+
+        public string FinalRitualLabel()
+        {
+            if (workshopRestored)
+            {
+                return "FINAL RITUAL COMPLETE";
+            }
+            if (!FinalRitualReady)
+            {
+                return "FINAL RITUAL - complete all goals";
+            }
+            return "BEGIN FINAL RITUAL - 25 gold + 2 essence";
+        }
+
+        public void TryPerformFinalRitual()
+        {
+            if (workshopRestored)
+            {
+                SetFeedback("The Arcane Workshop has already been restored.");
+                return;
+            }
+            if (!FinalRitualReady)
+            {
+                ArcaneAudio.Play2D(SoundId.UiError);
+                SetFeedback("The Final Ritual is locked until every restoration goal is complete.");
+                return;
+            }
+
+            WorkshopResourceAmount[] ritualCost =
+            {
+                new WorkshopResourceAmount(WorkshopResourceKind.Gold, 25),
+                new WorkshopResourceAmount(WorkshopResourceKind.Essence, 2)
+            };
+            if (!TrySpendResources(ritualCost))
+            {
+                ArcaneAudio.Play2D(SoundId.UiError);
+                SetFeedback("The Final Ritual requires 25 Gold and 2 Essence.");
+                return;
+            }
+
+            workshopRestored = true;
+            TriggerEnding();
         }
 
         private void TriggerEnding()
@@ -867,6 +1004,13 @@ namespace ArcaneWorkshop
         {
             if (cell == null)
             {
+                return;
+            }
+
+            if (!IsBuildingUnlocked(selectedBuilding))
+            {
+                ArcaneAudio.Play2D(SoundId.UiError);
+                SetFeedback(DisplayName(selectedBuilding) + " is still locked by workshop progression.");
                 return;
             }
 
@@ -956,15 +1100,10 @@ namespace ArcaneWorkshop
                     break;
             }
 
-            if (herbs < herbCost || crystals < crystalCost || gold < goldCost)
-            {
-                return false;
-            }
-
-            herbs -= herbCost;
-            crystals -= crystalCost;
-            gold -= goldCost;
-            return true;
+            return TrySpendResources(
+                new WorkshopResourceAmount(WorkshopResourceKind.MoonHerb, herbCost),
+                new WorkshopResourceAmount(WorkshopResourceKind.Crystal, crystalCost),
+                new WorkshopResourceAmount(WorkshopResourceKind.Gold, goldCost));
         }
 
         private void TickNeighborInteractions(float deltaTime)
@@ -1123,6 +1262,11 @@ namespace ArcaneWorkshop
             {
                 renderers.AddRange(merchantPortal.GetComponentsInChildren<Renderer>());
             }
+            GameObject teamExpansion = GameObject.Find("MP2B Team Expansion");
+            if (teamExpansion != null)
+            {
+                renderers.AddRange(teamExpansion.GetComponentsInChildren<Renderer>());
+            }
 
             foreach (Renderer blocker in renderers)
             {
@@ -1254,13 +1398,30 @@ namespace ArcaneWorkshop
             }
 
             ArcaneBuilding target = targets[Random.Range(0, targets.Count)];
+            Component impactTarget = target;
             Vector3 offset = target.Kind == BuildingKind.RuneFoundation ? Vector3.up * 0.04f : Vector3.up * 0.55f;
-            Vector3 start = target.transform.position + new Vector3(Random.Range(-5f, 5f), 11f, Random.Range(-5f, 5f));
-            ArcaneProjectile star = ArcaneProjectile.Spawn(ProjectileKind.FallingStar, start, target, offset, null, 0.22f);
+            TeamExpansionStation[] teamStations = FindObjectsByType<TeamExpansionStation>();
+            for (int i = 0; i < teamStations.Length; i++)
+            {
+                if (!teamStations[i].CanInterceptFallingStar)
+                {
+                    continue;
+                }
+                impactTarget = teamStations[i];
+                offset = Vector3.up * 1.1f;
+                SetFeedback("The Astral Foundry Shield has locked onto an incoming falling star!");
+                break;
+            }
+
+            Vector3 start = impactTarget.transform.position + new Vector3(Random.Range(-5f, 5f), 11f, Random.Range(-5f, 5f));
+            ArcaneProjectile star = ArcaneProjectile.Spawn(ProjectileKind.FallingStar, start, impactTarget, offset, null, 0.22f);
             star.GetComponent<Renderer>().sharedMaterial = starMaterial;
             AddTrail(star.gameObject, new Color(1f, 0.85f, 0.45f), 0.8f);
             ArcaneAudio.Play(SoundId.StarWhoosh, Vector3.Lerp(start, target.transform.position, 0.6f));
-            SetFeedback("A falling star streaks toward the workshop!");
+            if (impactTarget == target)
+            {
+                SetFeedback("A falling star streaks toward the workshop!");
+            }
         }
 
         private void AddTrail(GameObject owner, Color color, float time)
@@ -1304,7 +1465,7 @@ namespace ArcaneWorkshop
 
         public void ReceiveSale(int payment, Vector3 position)
         {
-            gold += payment;
+            AddResource(WorkshopResourceKind.Gold, payment);
             potionsSold++;
             lifetimeSales += payment;
             SetFeedback("The merchant paid " + payment + " Gold for the Potion.");
@@ -1343,17 +1504,73 @@ namespace ArcaneWorkshop
                 return false;
             }
 
-            BrewRecipe recipe = recipes[recipeIndex];
-            if (herbs < recipe.herbs || crystals < recipe.crystals || water < recipe.water || essence < recipe.essence)
+            if (!IsRecipeUnlocked(recipeIndex))
             {
+                SetFeedback(RecipeLockReason(recipeIndex));
                 return false;
             }
 
-            herbs -= recipe.herbs;
-            crystals -= recipe.crystals;
-            water -= recipe.water;
-            essence -= recipe.essence;
+            BrewRecipe recipe = recipes[recipeIndex];
+            return TrySpendResources(
+                new WorkshopResourceAmount(WorkshopResourceKind.MoonHerb, recipe.herbs),
+                new WorkshopResourceAmount(WorkshopResourceKind.Crystal, recipe.crystals),
+                new WorkshopResourceAmount(WorkshopResourceKind.Water, recipe.water),
+                new WorkshopResourceAmount(WorkshopResourceKind.Essence, recipe.essence),
+                new WorkshopResourceAmount(WorkshopResourceKind.ConservatoryBloom, recipe.conservatoryBlooms),
+                new WorkshopResourceAmount(WorkshopResourceKind.AstralCore, recipe.astralCores));
+        }
+
+        public bool TryPerformConvergenceBrew(Vector3 position)
+        {
+            int recipeIndex = -1;
+            for (int i = 0; i < recipes.Length; i++)
+            {
+                if (recipes[i].requiredUnlock == WorkshopUnlock.AdvancedAlchemy)
+                {
+                    recipeIndex = i;
+                    break;
+                }
+            }
+
+            if (recipeIndex < 0)
+            {
+                SetFeedback("The Convergence Elixir recipe is missing.");
+                return false;
+            }
+            if (!IsRecipeUnlocked(recipeIndex))
+            {
+                SetFeedback(RecipeLockReason(recipeIndex));
+                return false;
+            }
+            if (!TryConsumeRecipe(recipeIndex))
+            {
+                SetFeedback("Convergence requires " + recipes[recipeIndex].CostLabel() + ".");
+                return false;
+            }
+
+            CompleteBrew(recipeIndex, position);
+            CheckGoals();
+            SetFeedback("Convergence Elixir completed at the Nexus. The three workshop disciplines are united.");
             return true;
+        }
+
+        public bool IsFeatureUnlocked(WorkshopUnlock feature)
+        {
+            return progression != null && progression.IsUnlocked(feature);
+        }
+
+        public string TeamIntegrationSummary()
+        {
+            string outputs = "Bloom " + conservatoryBlooms + "   Astral Core " + astralCores;
+            if (FinalRitualReady)
+            {
+                return outputs + "\nFINAL RITUAL READY";
+            }
+            if (progression != null && progression.IsUnlocked(WorkshopUnlock.AdvancedAlchemy))
+            {
+                return outputs + "\nCONVERGENCE ALCHEMY READY";
+            }
+            return outputs + "\nDeliver both team outputs to unlock Convergence";
         }
 
         public void CompleteBrew(int recipeIndex, Vector3 position)
@@ -1365,6 +1582,10 @@ namespace ArcaneWorkshop
 
             potionStock.Enqueue(recipes[recipeIndex].goldReward);
             potionsBrewed++;
+            if (recipes[recipeIndex].requiredUnlock == WorkshopUnlock.AdvancedAlchemy)
+            {
+                advancedPotionsBrewed++;
+            }
             ArcaneAudio.Play(SoundId.BrewComplete, position);
             potions = potionStock.Count;
             SetFeedback(recipes[recipeIndex].name + " completed: +1 Potion (worth about " + recipes[recipeIndex].goldReward + " Gold). Sell it at the Merchant Gate.");
@@ -1373,28 +1594,144 @@ namespace ArcaneWorkshop
 
         public bool TrySpendWater(int amount)
         {
-            if (water < amount)
-            {
-                return false;
-            }
-            water -= amount;
-            return true;
+            return TrySpendResource(WorkshopResourceKind.Water, amount);
         }
 
         public bool TrySpendCrystals(int amount)
         {
-            if (crystals < amount)
+            return TrySpendResource(WorkshopResourceKind.Crystal, amount);
+        }
+
+        public void AddHerbs(int amount) { AddResource(WorkshopResourceKind.MoonHerb, amount); }
+        public void AddCrystals(int amount) { AddResource(WorkshopResourceKind.Crystal, amount); }
+        public void AddWater(int amount) { AddResource(WorkshopResourceKind.Water, amount); }
+        public void AddEssence(int amount) { AddResource(WorkshopResourceKind.Essence, amount); }
+
+        public int GetResource(WorkshopResourceKind kind)
+        {
+            switch (kind)
             {
-                return false;
+                case WorkshopResourceKind.MoonHerb: return herbs;
+                case WorkshopResourceKind.Crystal: return crystals;
+                case WorkshopResourceKind.Water: return water;
+                case WorkshopResourceKind.Essence: return essence;
+                case WorkshopResourceKind.Gold: return gold;
+                case WorkshopResourceKind.ConservatoryBloom: return conservatoryBlooms;
+                case WorkshopResourceKind.AstralCore: return astralCores;
+                default: throw new System.ArgumentOutOfRangeException(nameof(kind), kind, null);
             }
-            crystals -= amount;
+        }
+
+        public void AddResource(WorkshopResourceKind kind, int amount)
+        {
+            if (amount < 0)
+            {
+                throw new System.ArgumentOutOfRangeException(nameof(amount), "Resource additions cannot be negative.");
+            }
+            if (amount == 0)
+            {
+                return;
+            }
+
+            ChangeResource(kind, amount);
+            TryUnlockConvergenceAlchemy();
+        }
+
+        public bool TrySpendResource(WorkshopResourceKind kind, int amount)
+        {
+            return TrySpendResources(new WorkshopResourceAmount(kind, amount));
+        }
+
+        public bool TrySpendResources(params WorkshopResourceAmount[] costs)
+        {
+            if (costs == null)
+            {
+                throw new System.ArgumentNullException(nameof(costs));
+            }
+
+            Dictionary<WorkshopResourceKind, int> totals = new Dictionary<WorkshopResourceKind, int>();
+            for (int i = 0; i < costs.Length; i++)
+            {
+                if (costs[i].amount < 0)
+                {
+                    throw new System.ArgumentOutOfRangeException(nameof(costs), "Resource costs cannot be negative.");
+                }
+                if (costs[i].amount == 0)
+                {
+                    continue;
+                }
+
+                int existing;
+                totals.TryGetValue(costs[i].kind, out existing);
+                totals[costs[i].kind] = existing + costs[i].amount;
+            }
+
+            foreach (KeyValuePair<WorkshopResourceKind, int> cost in totals)
+            {
+                if (GetResource(cost.Key) < cost.Value)
+                {
+                    return false;
+                }
+            }
+
+            foreach (KeyValuePair<WorkshopResourceKind, int> cost in totals)
+            {
+                ChangeResource(cost.Key, -cost.Value);
+            }
             return true;
         }
 
-        public void AddHerbs(int amount) { herbs += amount; }
-        public void AddCrystals(int amount) { crystals += amount; }
-        public void AddWater(int amount) { water += amount; }
-        public void AddEssence(int amount) { essence += amount; }
+        public bool RegisterTeammateOutput(WorkshopResourceKind kind, int amount, string sourceMember)
+        {
+            if (kind != WorkshopResourceKind.ConservatoryBloom && kind != WorkshopResourceKind.AstralCore)
+            {
+                Debug.LogError("Teammate output must be a Conservatory Bloom or Astral Core.");
+                return false;
+            }
+            if (amount <= 0)
+            {
+                Debug.LogError("Teammate output amount must be positive.");
+                return false;
+            }
+
+            AddResource(kind, amount);
+            SetFeedback((string.IsNullOrWhiteSpace(sourceMember) ? "A teammate" : sourceMember) + " delivered " + amount + " " +
+                WorkshopProgression.ResourceDisplayName(kind) + (amount == 1 ? "." : "s."));
+            return true;
+        }
+
+        private void ChangeResource(WorkshopResourceKind kind, int delta)
+        {
+            int oldValue = GetResource(kind);
+            int newValue = Mathf.Max(0, oldValue + delta);
+            switch (kind)
+            {
+                case WorkshopResourceKind.MoonHerb: herbs = newValue; break;
+                case WorkshopResourceKind.Crystal: crystals = newValue; break;
+                case WorkshopResourceKind.Water: water = newValue; break;
+                case WorkshopResourceKind.Essence: essence = newValue; break;
+                case WorkshopResourceKind.Gold: gold = newValue; break;
+                case WorkshopResourceKind.ConservatoryBloom: conservatoryBlooms = newValue; break;
+                case WorkshopResourceKind.AstralCore: astralCores = newValue; break;
+                default: throw new System.ArgumentOutOfRangeException(nameof(kind), kind, null);
+            }
+
+            ResourceChanged?.Invoke(kind, oldValue, newValue);
+        }
+
+        private void TryUnlockConvergenceAlchemy()
+        {
+            if (conservatoryBlooms <= 0 || astralCores <= 0 || progression == null)
+            {
+                return;
+            }
+
+            if (progression.Unlock(WorkshopUnlock.AdvancedAlchemy))
+            {
+                ArcaneAudio.Play2D(SoundId.GoalComplete);
+                SetFeedback("Convergence Alchemy unlocked: Justin's Bloom and Lucas's Astral Core now form an advanced recipe.");
+            }
+        }
 
         public void SetFeedback(string message)
         {
@@ -1443,6 +1780,10 @@ namespace ArcaneWorkshop
         // Editor-only shortcut for testing: builds the ideal Planter <- Still -> Amplifier -> Cauldron chain.
         private string DebugBuildDemoLayout()
         {
+            UnlockFeature(WorkshopUnlock.MoonPlanter);
+            UnlockFeature(WorkshopUnlock.ManaStill);
+            UnlockFeature(WorkshopUnlock.StarCauldron);
+            UnlockFeature(WorkshopUnlock.CrystalAmplifier);
             gold += 100;
             crystals += 20;
             herbs += 10;
@@ -1490,7 +1831,7 @@ namespace ArcaneWorkshop
                 case "ripen": cells[3, 2].building.DebugSetGrowth(100f); cells[3, 2].building.Interact(); break;
                 case "kill": cells[3, 4].building.DebugDamage(200f); break;
                 case "nodes": return "nodes=" + FindObjectsByType<GatherableNode>().Length + " blockers=" + spawnBlockers.Count;
-                case "goals": potionsBrewed++; potionsSold++; lifetimeSales += 200; anyLinkEver = true; return "goals forced";
+                case "goals": potionsBrewed++; advancedPotionsBrewed++; potionsSold++; lifetimeSales += 200; anyLinkEver = true; return "goals forced";
                 case "stats": return "herbs=" + herbs + " crystals=" + crystals + " water=" + water + " essence=" + essence + " potions=" + potions + " gold=" + gold + " tut=" + string.Join(",", shownTutorials);
             }
             return action + " ok";
@@ -1529,11 +1870,12 @@ namespace ArcaneWorkshop
             GUI.Box(new Rect(12f, 12f, 292f, Screen.height - 24f), GUIContent.none);
             GUILayout.BeginArea(new Rect(26f, 22f, 264f, Screen.height - 44f));
 
-            GUILayout.Label("ARCANE WORKSHOP", titleStyle);
+            GUILayout.Label("MP2B: ARCANE WORKSHOP", titleStyle);
             GUILayout.Label("Player Resources", resourceStyle);
             GUILayout.Label("Moon Herbs: " + herbs + "    Crystals: " + crystals, smallStyle);
             GUILayout.Label("Water: " + water + "    Essence: " + essence, smallStyle);
             GUILayout.Label("Potions: " + potions + "    Gold: " + gold, smallStyle);
+            GUILayout.Label("Blooms: " + conservatoryBlooms + "    Astral Cores: " + astralCores, smallStyle);
             GUILayout.Space(8f);
             GUILayout.Label(GoalSummary(), resourceStyle);
             GUILayout.Space(12f);
@@ -1549,12 +1891,27 @@ namespace ArcaneWorkshop
             GUILayout.Label("Cauldron Recipe", resourceStyle);
             for (int i = 0; i < recipes.Length; i++)
             {
+                bool unlocked = IsRecipeUnlocked(i);
                 string marker = selectedRecipe == i ? "● " : "○ ";
-                if (GUILayout.Button(marker + recipes[i].name + "\n" + recipes[i].CostLabel(), GUILayout.Height(42f)))
+                bool previousEnabled = GUI.enabled;
+                GUI.enabled = previousEnabled && unlocked;
+                string suffix = unlocked ? recipes[i].CostLabel() : "LOCKED - needs Bloom + Astral Core";
+                if (GUILayout.Button(marker + recipes[i].name + "\n" + suffix, GUILayout.Height(42f)))
                 {
                     SelectRecipe(i);
                 }
+                GUI.enabled = previousEnabled;
             }
+
+            GUILayout.Space(8f);
+            bool ritualEnabled = FinalRitualReady && !workshopRestored;
+            bool previousRitualEnabled = GUI.enabled;
+            GUI.enabled = previousRitualEnabled && ritualEnabled;
+            if (GUILayout.Button(FinalRitualLabel(), GUILayout.Height(38f)))
+            {
+                TryPerformFinalRitual();
+            }
+            GUI.enabled = previousRitualEnabled;
 
             GUILayout.FlexibleSpace();
             GUILayout.Label("Controls", resourceStyle);
@@ -1572,11 +1929,16 @@ namespace ArcaneWorkshop
 
         private void DrawBuildButton(BuildingKind kind, string hotkey, string cost)
         {
+            bool unlocked = IsBuildingUnlocked(kind);
             string marker = placing && selectedBuilding == kind ? "● " : "○ ";
-            if (GUILayout.Button(marker + hotkey + "  " + DisplayName(kind) + " — " + cost, GUILayout.Height(31f)))
+            bool previousEnabled = GUI.enabled;
+            GUI.enabled = previousEnabled && unlocked;
+            string suffix = unlocked ? cost : "LOCKED";
+            if (GUILayout.Button(marker + hotkey + "  " + DisplayName(kind) + " — " + suffix, GUILayout.Height(31f)))
             {
                 SelectBuilding(kind);
             }
+            GUI.enabled = previousEnabled;
         }
 
         private void EnsureGuiStyles()

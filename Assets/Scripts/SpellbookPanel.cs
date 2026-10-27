@@ -19,6 +19,7 @@ namespace ArcaneWorkshop
         private TextMesh trackingStatusText;
         private WorldButton[] buildButtons;
         private WorldButton[] recipeButtons;
+        private WorldButton ritualButton;
         private float refreshTimer;
 
         public static SpellbookPanel Create(ArcaneGameManager manager, Transform anchor, Material pageMaterial, Material buttonMaterial)
@@ -37,11 +38,14 @@ namespace ArcaneWorkshop
             CreatePage(new Vector3(-1.02f, 0f, 0.03f), pageMaterial);
             CreatePage(new Vector3(1.02f, 0f, 0.03f), pageMaterial);
 
-            AddText("ARCANE WORKSHOP", new Vector3(-1.95f, 1.1f, 0f), 0.034f, new Color(0.55f, 0.95f, 1f));
-            resourceText = AddText("", new Vector3(-1.95f, 0.78f, 0f), 0.026f, Color.white);
-            goalText = AddText("", new Vector3(-1.95f, -0.32f, 0f), 0.022f, new Color(1f, 0.9f, 0.6f));
-            feedbackText = AddText("", new Vector3(-1.95f, -0.95f, 0f), 0.019f, new Color(0.8f, 0.85f, 1f));
-            trackingStatusText = AddText("", new Vector3(-1.95f, -1.18f, 0f), 0.017f, new Color(1f, 0.72f, 0.3f));
+            AddText("MP2B: ARCANE WORKSHOP", new Vector3(-1.95f, 1.1f, 0f), 0.03f, new Color(0.55f, 0.95f, 1f));
+            resourceText = AddText("", new Vector3(-1.95f, 0.78f, 0f), 0.022f, Color.white);
+            goalText = AddText("", new Vector3(-1.95f, -0.2f, 0f), 0.019f, new Color(1f, 0.9f, 0.6f));
+            feedbackText = AddText("", new Vector3(-1.95f, -0.66f, 0f), 0.017f, new Color(0.8f, 0.85f, 1f));
+            trackingStatusText = AddText("", new Vector3(-1.95f, -1.2f, 0f), 0.015f, new Color(1f, 0.72f, 0.3f));
+            ritualButton = WorldButton.Create(transform, manager.FinalRitualLabel(),
+                new Vector3(-1.02f, -1.02f, 0f), new Vector2(1.84f, 0.18f), 0.015f, buttonMaterial,
+                manager.TryPerformFinalRitual);
 
             AddText("BUILD  (point + trigger)", new Vector3(0.1f, 1.14f, 0f), 0.022f, new Color(0.92f, 0.8f, 1f));
             buildButtons = new WorldButton[BuildOrder.Length];
@@ -53,14 +57,14 @@ namespace ArcaneWorkshop
                     () => manager.SelectBuilding(kind));
             }
 
-            AddText("RECIPE", new Vector3(0.1f, -0.5f, 0f), 0.022f, new Color(0.92f, 0.8f, 1f));
+            AddText("RECIPE", new Vector3(0.1f, -0.45f, 0f), 0.022f, new Color(0.92f, 0.8f, 1f));
             BrewRecipe[] recipes = manager.Recipes;
             recipeButtons = new WorldButton[recipes.Length];
             for (int i = 0; i < recipes.Length; i++)
             {
                 int index = i;
                 recipeButtons[i] = WorldButton.Create(transform, recipes[i].name + "  ->  " + recipes[i].goldReward + "g\n" + recipes[i].CostLabel(),
-                    new Vector3(1.02f, -0.76f - i * 0.25f, 0f), new Vector2(1.84f, 0.22f), 0.016f, buttonMaterial,
+                    new Vector3(1.02f, -0.64f - i * 0.2f, 0f), new Vector2(1.84f, 0.17f), 0.014f, buttonMaterial,
                     () => manager.SelectRecipe(index));
             }
         }
@@ -113,12 +117,22 @@ namespace ArcaneWorkshop
             feedbackText.text = ArcaneGameManager.Wrap(manager.Feedback, 46);
             for (int i = 0; i < buildButtons.Length; i++)
             {
-                buildButtons[i].SetSelected(manager.Placing && manager.SelectedBuilding == BuildOrder[i]);
+                bool unlocked = manager.IsBuildingUnlocked(BuildOrder[i]);
+                buildButtons[i].SetInteractable(unlocked);
+                buildButtons[i].SetSelected(unlocked && manager.Placing && manager.SelectedBuilding == BuildOrder[i]);
+                string suffix = unlocked ? ArcaneGameManager.CostLabel(BuildOrder[i]) : "LOCKED";
+                buildButtons[i].SetText(ArcaneGameManager.DisplayName(BuildOrder[i]) + "  -  " + suffix);
             }
             for (int i = 0; i < recipeButtons.Length; i++)
             {
-                recipeButtons[i].SetSelected(manager.SelectedRecipe == i);
+                bool unlocked = manager.IsRecipeUnlocked(i);
+                recipeButtons[i].SetInteractable(unlocked);
+                recipeButtons[i].SetSelected(unlocked && manager.SelectedRecipe == i);
+                string details = unlocked ? manager.Recipes[i].CostLabel() : "LOCKED - TEAM OUTPUTS";
+                recipeButtons[i].SetText(manager.Recipes[i].name + "  ->  " + manager.Recipes[i].goldReward + "g\n" + details);
             }
+            ritualButton.SetText(manager.FinalRitualLabel());
+            ritualButton.SetInteractable(manager.FinalRitualReady);
         }
     }
 }

@@ -14,6 +14,7 @@ namespace ArcaneWorkshop
         private Renderer background;
         private MaterialPropertyBlock block;
         private bool selected;
+        private bool interactable = true;
         private float hoverUntil;
 
         public static WorldButton Create(Transform parent, string text, Vector3 localPosition, Vector2 size, float characterSize, Material material, Action onClick)
@@ -62,6 +63,15 @@ namespace ArcaneWorkshop
             selected = value;
         }
 
+        public void SetInteractable(bool value)
+        {
+            interactable = value;
+            if (label != null)
+            {
+                label.color = value ? new Color(0.9f, 0.96f, 1f) : new Color(0.5f, 0.5f, 0.58f);
+            }
+        }
+
         public void Hover()
         {
             hoverUntil = Time.unscaledTime + 0.1f;
@@ -69,7 +79,7 @@ namespace ArcaneWorkshop
 
         public void Press()
         {
-            if (onClick != null)
+            if (interactable && onClick != null)
             {
                 onClick();
             }
@@ -78,8 +88,10 @@ namespace ArcaneWorkshop
         private void LateUpdate()
         {
             bool hovered = Time.unscaledTime < hoverUntil;
-            Color color = selected ? new Color(0.25f, 0.55f, 0.85f) : new Color(0.12f, 0.1f, 0.22f);
-            if (hovered)
+            Color color = !interactable
+                ? new Color(0.075f, 0.07f, 0.1f)
+                : selected ? new Color(0.25f, 0.55f, 0.85f) : new Color(0.12f, 0.1f, 0.22f);
+            if (hovered && interactable)
             {
                 color = Color.Lerp(color, new Color(0.55f, 0.9f, 1f), 0.45f);
             }

@@ -213,6 +213,7 @@ public static class ArcaneWorkshopBuilder
         ground.GetComponent<Renderer>().sharedMaterial = floor;
 
         CreateWorkshopBackdrop(rune, crystal, metal, stone, floor);
+        MP2BTeamSceneBuilder.BuildIntoScene(manager);
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
         RenderSettings.ambientLight = new Color(0.08f, 0.07f, 0.15f);
         RenderSettings.fog = true;
