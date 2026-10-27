@@ -50,6 +50,32 @@ The migration intentionally excludes MP2A `Library/`, `Logs/`, `Builds/`, `UserS
 
 See `Documentation/MP2B_SETUP.md` for ownership, extension points, and the completed setup milestones.
 
+## Keliang farm migration
+
+`Assets/Scenes/ArcaneWorkshop.unity` now contains the complete MP2A farm at `keliangFarmIsland` (position `-28, 0, -36`), the `mainToFarmBridge`, and one shared `playerRig` imported from the farm's XRI setup. Keliang owns the farm/conservatory gameplay; the older reference-station labels have not yet been reassigned.
+
+- Nine plots, tools, crop growth/health, fertilizer, trading, mining, sprinklers, upgrade kits and interaction prompts are retained; the old fixed farm HUD is disabled in favor of the shared spellbook. The empty 80 m background ground was trimmed to a 32 m island; gameplay objects remain at their original scale. The entrance boundary has a bridge opening.
+- Farm scripts and integration/editor tools are in `Assets/Scripts/Keliang`. External models, sounds, XRI Starter Assets and TMP resources are under `Assets/ThirdParty/Keliang`, with original GUIDs and available licenses. Farm models come from LowPolyFarmLite, Gridness Studios Lite Farm Pack and Kenney Nature Kit; used effects come from Leohpaz RPG Essentials Free.
+- Farm materials target the existing Built-in renderer. Soil/crop tint and flowing-water texture properties were adapted. `farmSoil` uses layer 8; `farmVisual` uses layer 9. Farm-only sunlight avoids illuminating the main workshop with a second sun.
+- XRI owns movement, turning and grabbing across both islands. `FarmWorkshopRig` forwards right trigger/grip/B and left X to the workshop near the main island and uses the shared left-hand spellbook; Y can also open it outside the main island. The old workshop rig is suppressed, so its origin-centered movement clamp cannot pull the player off the bridge. The main island uses a mesh collider matching its visible ground instead of the oversized cylinder capsule collider.
+- The original `mp2aunity` project is unchanged. Moon Herb harvests and farm crop trades use the existing shared MoonHerb balance. The separate purple Bloom seed bag grows Conservatory Bloom; its first harvest grants exactly two shared Blooms. Existing spellbook resource text reflects both harvests.
+
+The shared XR rig uses left-stick walking at 1.3 m/s, right-stick 30-degree snap turns, and the existing right-stick teleport gesture. Main-island, bridge and farm teleport areas reject edge and occupied destinations. Walking uses the original comfort vignette; snap turns and teleports trigger its blink.
+
+Workshop controls: right trigger selects/gathers/builds; right grip uses stations and machines; B repairs or performs a station's alternate action; left X cancels placement. Y toggles the left-hand spellbook, including outside the main island. The book opens on arrival at the workshop, hides while the left hand handles a farm object, and falls back near the view if left-hand tracking is lost. The original building, recipe, resource, goal and ritual UI is reused.
+
+Farm interaction has priority: a hovered or held XRI object reserves that hand's input; teleport aiming also suppresses workshop actions. Blocked presses are consumed and the right-hand buttons must be released before workshop use resumes. Farm near/far detection includes its visual layer. Safety barriers use Ignore Raycast while remaining solid to the player; station click volumes are triggers, and flattened platform colliders follow their visible meshes.
+
+Checks are available under `MP2B > Keliang`: static integration validation and Play Mode checks for real near/far detection, input arbitration, spellbook/station actions, teleport movement, bridge/station collision, cultivation, trade and irrigation. Play checks discard their temporary gameplay state on exit. Headset comfort, controller reach and hardware input still require a device walkthrough.
+
+### Farm lessons and unlocks
+
+First tilling unlocks the Moon Herb seed bag; the first personal Moon Herb harvest unlocks Bloom; the first Bloom harvest unlocks sprinkler purchase and placement. Each unlock introduces the mechanic before revealing its tool. A world-space farm board shows the current next step and persistent recovery instructions after errors. Existing stock does not count as a personal harvest milestone.
+
+The locked sprinkler purchase button remains clickable to explain the requirement. Both its UI action and inventory purchase API reject locked or unaffordable purchases before any deduction. Missing-material lessons explain mining/trading and update when the player has enough. Seed/fertilizer contact attempts are handled once per visit to a plot, and immature crops accept the original grip interaction to explain why harvesting cannot succeed yet. These lesson flags currently live for the running session; no save system was introduced.
+
+All related scripts are under `Assets/Scripts/Keliang`. Use `MP2B > Keliang > Check Farm Lessons and Spending` for the current integrated progression and transaction checks (25 checks passed). The earlier crop checks route to this sequential flow when farm progression is present. The original migration check suite predates these unlock gates. Quest headset validation remains outstanding.
+
 ## Collaboration rules
 
 - `main` must stay buildable.

@@ -35,6 +35,7 @@ namespace ArcaneWorkshop
             bubble.text = mesh;
 
             bubble.hitBox = root.AddComponent<BoxCollider>();
+            bubble.hitBox.isTrigger = true;
             // Show() sets the scroll's own scale, so only billboard it.
             root.AddComponent<WorldLabelBillboard>().ScaleWithDistance = false;
             root.SetActive(false);
