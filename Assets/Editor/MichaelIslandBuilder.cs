@@ -60,6 +60,7 @@ public static class MichaelIslandBuilder
         DestroyRoot("MP2B Team Expansion");
         DestroyRoot(RootName);
         GameObject root = new GameObject(RootName);
+        root.AddComponent<AmbientSoundscape>();
 
         Materials m = LoadMaterials();
         ArrangeMp2aProps();
@@ -504,6 +505,7 @@ public static class MichaelIslandBuilder
         barrier.size = new Vector3(5.6f, 3.9f, 0.7f);
         gate.AddComponent<WalkBlocker>();
 
+        gate.AddComponent<HoverHighlight>().Configure(label);
         IslandLinkGate link = gate.AddComponent<IslandLinkGate>();
         Renderer[] glows = glyphRenderer != null
             ? new[] { goldBand.GetComponent<Renderer>(), glyphRenderer }
@@ -666,6 +668,7 @@ public static class MichaelIslandBuilder
         collider.size = new Vector3(1.35f, 2.1f, 1.35f);
         receiverObject.AddComponent<WalkBlocker>();
 
+        receiverObject.AddComponent<HoverHighlight>().Configure(label);
         TeammateDeliveryReceiver receiver = receiverObject.AddComponent<TeammateDeliveryReceiver>();
         receiver.Configure(resource, source, anchor.transform, label, manager, gate, origin.transform,
             crate != null ? crate.transform : null, beacon.transform, cost);
@@ -711,16 +714,26 @@ public static class MichaelIslandBuilder
         collider.size = new Vector3(2.6f, 2.4f, 2.6f);
         altar.AddComponent<WalkBlocker>();
 
+        altar.AddComponent<HoverHighlight>().Configure(label);
+        AudioSource altarHum = altar.AddComponent<AudioSource>();
+        altarHum.clip = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/ThirdParty/KenneyAudio/forceField_001.ogg");
+        altarHum.loop = true;
+        altarHum.playOnAwake = true;
+        altarHum.spatialBlend = 1f;
+        altarHum.volume = 0.18f;
+        altarHum.minDistance = 1.2f;
+        altarHum.maxDistance = 8f;
+        altarHum.rolloffMode = AudioRolloffMode.Linear;
         TeamExpansionStation station = altar.AddComponent<TeamExpansionStation>();
         station.Configure(TeamStationKind.ConvergenceNexus, manager, label, triad.transform, core.GetComponent<Renderer>(), light);
     }
 
     private static void CreateNexusCore(Transform parent, ArcaneGameManager manager, Materials m)
     {
-        // Floats in the void beyond the front rim, where the three islands' triangle closes. No floor.
+        // Floats high in the void beyond the workshop wall, inside the three-island triangle. No floor.
         GameObject nexus = new GameObject("Floating Nexus Core");
         nexus.transform.SetParent(parent, false);
-        nexus.transform.position = new Vector3(0f, 6.5f, -24f);
+        nexus.transform.position = new Vector3(0f, 11.5f, 27f);
         FinalRitualIndicator indicator = nexus.AddComponent<FinalRitualIndicator>();
 
         BoxCollider collider = nexus.AddComponent<BoxCollider>();
@@ -750,6 +763,7 @@ public static class MichaelIslandBuilder
         CreateMeshObject("Nexus Blue Orbit", orbit, crystalRoot.transform, Vector3.zero, new Vector3(20f, 60f, 0f), Vector3.one * 0.82f, m.nexusGlow);
         TextMesh label = CreateLabel(nexus.transform, string.Empty, new Vector3(0f, 5.6f, 0f), 0.06f, 60, true);
         Light light = CreatePointLight("Nexus Light", nexus.transform, new Vector3(0f, 2.2f, 2f), new Color(0.32f, 0.42f, 0.72f), 0.65f, 14f);
+        nexus.AddComponent<HoverHighlight>().Configure(label);
         indicator.Configure(manager, crystalRoot.transform, label, core.GetComponent<Renderer>(), light);
     }
 
@@ -757,7 +771,7 @@ public static class MichaelIslandBuilder
     {
         GameObject title = new GameObject("Workshop Title Plaque");
         title.transform.SetParent(parent, false);
-        title.transform.position = new Vector3(0f, 5.05f, 8.05f);
+        title.transform.position = new Vector3(0f, 6.05f, 8.05f);
         CreatePrimitive("Plaque Backing", PrimitiveType.Cube, title.transform, Vector3.zero, new Vector3(7.6f, 1.1f, 0.12f),
             m.metal).GetComponent<Collider>().enabled = false;
         CreatePrimitive("Plaque Trim Top", PrimitiveType.Cube, title.transform, new Vector3(0f, 0.58f, -0.04f),

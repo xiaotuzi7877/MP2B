@@ -18,7 +18,7 @@ Rules
 - [x] A1 New branch `michael/island-final` from `main`; triangle work set aside
 - [x] A2 Audit `main` scene in Play Mode (screenshots): fake teammate districts on the island, rune paths over the grid, black sky, flat light, props without colliders, floor CapsuleCollider bug
 
-## B. Island structure (MP2B additions) — group commit 1
+## B. Island structure (MP2B additions) — commit e94e0d4
 - [x] B1 Remove `MP2B Team Expansion` (fake Conservatory/Foundry districts, rune paths, old title)
 - [x] B2 `MichaelIslandBuilder` editor tool (idempotent) — rebuilds only the MP2B layer
 - [x] B3 Lucas bridge gate (west) + Justin bridge gate (east): stone ring, glyph ring, portal veil, swirl particles, 3D hum, solid barrier, wooden pier where the teammate bridge docks
@@ -28,27 +28,28 @@ Rules
 - [x] B7 Floating Nexus Core in the void in front of the island (display only, dormant → ready → resonating)
 - [x] B8 Move MP2A trees/crates out of the two bridge corridors; wild spawns avoid the corridors
 - [x] B9 Validator updated: 46/46 pass
+- [x] B10 Nexus Core moved high above the back wall so it is visible from the spawn and during the ritual; title plaque raised above the ending panel
 
-## C. Art and lighting — group commit 1
+## C. Art and lighting — commit e94e0d4 (+ group 2)
 - [x] C1 CC0 assets: Kenney Castle + Fantasy Town (curated), ambientCG PavingStones070 / Rock030
 - [x] C2 Paved floor (texture + normal map), rock underside mesh + boulders, stone rim balustrade
 - [x] C3 Night-sky shader (stars, moon, nebula), trilight ambient, matched fog
 - [x] C4 Moon key light with soft shadows; point-light shadows off (Quest cost)
 - [x] C5 Ambient mana motes; faceted crystal mesh for Nexus / altar / receivers
-- [ ] C6 Back workshop wall: warmer interior light, banner/candle accents
+- [x] C6 Back wall reviewed in Play Mode — existing MP2A torches already give the warm interior; no change needed
 - [ ] C7 Final screenshot pass from VR eye height at spawn, gates, altar, merchant
 
 ## D. Colliders, sound, interaction
 - [x] D1 Floor CapsuleCollider → MeshCollider; BoxColliders + `WalkBlocker` on walls, pillars, furniture, trees, merchant pillars
 - [x] D2 VR smooth walk slides along solid props; teleport rejects targets inside props
-- [ ] D3 Ambient night loop (CC0) + fountain/altar hum
-- [ ] D4 Hover highlight on gates / receivers / altar (same as buildings)
-- [ ] D5 Spellbook page for bridges + receivers (what to do next)
+- [x] D3 Ambient night loop synthesised in code (wind, drone, chimes; seamless) + 3D hum at altar and awakened gates
+- [x] D4 Hover feedback: gate/receiver/altar/Nexus labels grow while the mouse or VR ray rests on them
+- [x] D5 Goal hints name the bridge steps (goal 6 awakens Lucas's gate; goal 7 says where to order and converge)
 
 ## E. Verification and hand-off
 - [x] E1 Play Mode chain test: goal 6 → Lucas gate awakens → order Bloom → Justin gate awakens → order Astral Core → Advanced Alchemy → altar Convergence, no errors
-- [ ] E2 Full desktop run from a fresh start to the Final Ritual
+- [x] E2 Full run in Play Mode through real pointer rays: gather → foundations → planter → still → cauldron brew → merchant sale → amplifier → Lucas gate → Bloom → Justin gate → Astral Core → altar Convergence → Final Ritual → ending panel + Nexus resonating. Only the slow Mana-Link growth and the 100-gold sales total were fast-forwarded. No Console errors.
 - [ ] E3 VR check (Quest Link / XR Simulator): spawn, walk into props, teleport, ray at gates
 - [ ] E4 README + this log, merge `michael/island-final` → `main`, push
 
-▶ STOPPED HERE — next: commit group 1, then C6
+▶ STOPPED HERE — next: C7 screenshots, README, merge to main
