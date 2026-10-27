@@ -927,6 +927,33 @@ namespace ArcaneWorkshop
             }
 
             SetFeedback("Unlocked: " + WorkshopProgression.DisplayName(feature) + ".");
+            string reveal = UnlockReveal(feature);
+            if (!string.IsNullOrEmpty(reveal))
+            {
+                ShowTutorial("unlock-" + feature, reveal, new Vector3(0f, 0.2f, 0f));
+            }
+        }
+
+        // Unlock Reveal: each new mechanic is introduced with its interface metaphor the moment its threshold clears.
+        private static string UnlockReveal(WorkshopUnlock feature)
+        {
+            switch (feature)
+            {
+                case WorkshopUnlock.MoonPlanter:
+                    return "NEW - Moon Planter: a garden bed that drinks moonlight. Build it on a Rune Foundation, water it with grip / right-click, and harvest Moon Herbs when it glows.";
+                case WorkshopUnlock.ManaStill:
+                    return "NEW - Mana Still: a copper still that distils mana from the night air. Place it next to a Planter and the glowing link pours mana into the soil.";
+                case WorkshopUnlock.StarCauldron:
+                    return "NEW - Star Cauldron: the recipe pot. Pick a recipe in the spellbook, then grip / right-click the cauldron; ingredients fly in as motes and a Potion comes out.";
+                case WorkshopUnlock.CrystalAmplifier:
+                    return "NEW - Crystal Amplifier: a crystal battery. Feed it Crystal; next to a Cauldron it heats the brew, next to a Still it resonates.";
+                case WorkshopUnlock.AdvancedAlchemy:
+                    return "NEW - Convergence Alchemy: the altar is the meeting table of the three islands. Lucas's Bloom + Justin's Astral Core + your herb, crystal and essence become one Elixir.";
+                case WorkshopUnlock.FinalRitual:
+                    return "NEW - Final Ritual: the Nexus Core is the lighthouse between the islands. Trigger it or the altar with 25 Gold + 2 Essence to wake all three workshops.";
+                default:
+                    return null;
+            }
         }
 
         private int CountBuildings(BuildingKind kind)
@@ -1825,6 +1852,7 @@ namespace ArcaneWorkshop
             {
                 ArcaneAudio.Play2D(SoundId.GoalComplete);
                 SetFeedback("Convergence Alchemy unlocked: Lucas's Bloom and Justin's Astral Core now form an advanced recipe.");
+                ShowTutorial("unlock-" + WorkshopUnlock.AdvancedAlchemy, UnlockReveal(WorkshopUnlock.AdvancedAlchemy), new Vector3(0f, 0.2f, 0f));
             }
         }
 

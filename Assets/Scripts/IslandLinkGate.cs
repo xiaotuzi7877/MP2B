@@ -157,7 +157,8 @@ namespace ArcaneWorkshop
             CelebrationSpark.Burst(transform.position + Vector3.up * 2f, 14, manager.MoteMaterial);
             manager.SetFeedback("The bridge gate to " + owner + "'s " + islandTitle + " has awakened! " +
                 "Order supplies at its receiver.");
-            manager.ShowTutorial("gate-" + owner, owner + "'s bridge gate is awake. Use the receiver beside it to order supplies from " + owner + "'s island.",
+            manager.ShowTutorial("gate-" + owner, "NEW - " + owner + "'s bridge gate: a border crossing to " + owner + "'s " + islandTitle +
+                ". The receiver beside it is the customs dock: pay the listed ingredients and a crate crosses the gate to you.",
                 transform.position + Vector3.up * 1.5f);
         }
 
