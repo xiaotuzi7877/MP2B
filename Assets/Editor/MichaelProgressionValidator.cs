@@ -233,8 +233,13 @@ namespace ArcaneWorkshop.Editor
             {
                 lucasGate |= gates[i].Owner == "Lucas";
                 justinGate |= gates[i].Owner == "Justin";
-                Check(gates[i].GetComponent<WalkBlocker>() != null && gates[i].GetComponent<Collider>() != null,
-                    gates[i].Owner + "'s bridge gate needs a solid safety barrier.", failures);
+                Collider barrier = gates[i].GetComponent<Collider>();
+                bool docked = gates[i].Owner == "Lucas" && GameObject.Find("mainToFarmBridge") != null;
+                Check(barrier != null, gates[i].Owner + "'s bridge gate needs a clickable barrier.", failures);
+                Check(barrier == null || (docked ? barrier.isTrigger && gates[i].GetComponent<WalkBlocker>() == null
+                                                 : !barrier.isTrigger && gates[i].GetComponent<WalkBlocker>() != null),
+                    gates[i].Owner + (docked ? "'s gate must let the player walk onto mainToFarmBridge."
+                                             : "'s gate needs a solid safety barrier until its bridge exists."), failures);
             }
             Check(gates.Length == 2 && lucasGate && justinGate, "Michael Island needs exactly two bridge gates: Lucas and Justin.", failures);
 

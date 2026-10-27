@@ -69,4 +69,6 @@ altar gold disc coplanar with floor; VR feedback text only appears on the spellb
 - [x] F7 Validator 123/123 (new layout checks: gate mirror, merchant clearance, grounded props, wall planes, unreachable islet); Play Mode presses at altar/Nexus/receiver/merchant, steps 7 → 8 → ritual, no Console errors
 - [ ] F8 On-headset check of comfort and the toast (lab)
 
-▶ STOPPED HERE — pushed `michael/fixes-oct27`. No PR opened: the user opens it and Lucas approves. Remaining: F8 on headset.
+- [x] F9 (PR #5 merged, approved by Keliang23) Lucas gate barrier was solid forever (nothing calls `Link()`), blocking the walk onto `mainToFarmBridge`; it is now a clickable trigger where a real bridge docks, Justin's stays solid. Validator 125/125
+
+▶ STOPPED HERE — pushed `michael/lucas-gate-walkable`; user opens the PR, Lucas approves. Remaining: F8 on headset, video, contribution summary.
