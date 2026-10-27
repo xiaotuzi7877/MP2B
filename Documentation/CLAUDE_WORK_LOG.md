@@ -51,6 +51,6 @@ Rules
 - [x] E2 Full run in Play Mode through real pointer rays: gather → foundations → planter → still → cauldron brew → merchant sale → amplifier → Lucas gate → Bloom → Justin gate → Astral Core → altar Convergence → Final Ritual → ending panel + Nexus resonating. Only the slow Mana-Link growth and the 100-gold sales total were fast-forwarded. No Console errors.
 - [x] E3a VR collision logic checked in Play Mode with the rig's capsule test: workbench, barrels, receivers, altar, gate barrier and back wall block; grid, spawn, both gate corridors and the altar front are free
 - [ ] E3b On-headset check (lab PC + Quest Link): spawn, walk into props, teleport, ray at gates — not possible on this Mac
-- [ ] E4 README + this log, merge `michael/island-final` → `main`, push
+- [x] E4 README + this log, merged `michael/island-final` → `main` (0f5aaa9), pushed
 
-▶ STOPPED HERE — next: C7 screenshots, README, merge to main
+▶ STOPPED HERE — merged to main (0f5aaa9). Remaining: E3b on-headset check at the lab, then record the video. Re-run MP2B › Build Michael Island only if the layer needs changes.
