@@ -53,4 +53,20 @@ Rules
 - [ ] E3b On-headset check (lab PC + Quest Link): spawn, walk into props, teleport, ray at gates — not possible on this Mac
 - [x] E4 README + this log, merged `michael/island-final` → `main` (0f5aaa9), pushed
 
-▶ STOPPED HERE — merged to main (0f5aaa9). Remaining: E3b on-headset check at the lab, then record the video. Re-run MP2B › Build Michael Island only if the layer needs changes.
+
+## F. Headset feedback fixes (2026-10-27, branch `michael/fixes-oct27` from main 8118739 incl. Keliang's farm)
+Findings: Lucas gate was moved by Keliang to the SW diagonal (yaw 218°, r 9) to meet `mainToFarmBridge`; MP2A props sit at y 0
+while the paved floor top is -0.16 (16 cm floating); back-wall segments overlap on the same plane (z-fighting = flicker);
+altar gold disc coplanar with floor; VR feedback text only appears on the spellbook, so failed altar/ritual presses look like
+"nothing happens"; XRI JumpProvider is live; spellbook is hard-parented to the tracked hand (every tremor shows).
+- [x] F1 Layout: Justin gate mirrored to the SE diagonal (yaw 142°), Merchant Gate moved to Justin's old east slot; receivers beside their gates; balustrade gaps follow the gates
+- [x] F2 Grounding: MP2A props, merchant gate and gate parts sit on the floor (-0.16)
+- [x] F3 Flicker: back-wall segments offset off the shared plane; altar disc lifted; Quest shadow settings
+- [x] F4 Ritual island: Nexus Core becomes a floating, non-landable ritual islet at the centre of the three islands
+- [x] F5 Step 7/8 interaction: world-space feedback toast at the pointer target + error sounds; altar label lists exact needs and progress
+- [x] F6 Comfort: jump off, spellbook tremor filter (6 mm hand jitter → 0.5 mm), Quest quality without shadow maps (no refresh-rate change: XR runtime default kept)
+- [x] F5b Altar no longer overwrites the exact failure reason with a generic line; failed presses play the error sound; Nexus Core starts the ritual once aligned
+- [x] F7 Validator 123/123 (new layout checks: gate mirror, merchant clearance, grounded props, wall planes, unreachable islet); Play Mode presses at altar/Nexus/receiver/merchant, steps 7 → 8 → ritual, no Console errors
+- [ ] F8 On-headset check of comfort and the toast (lab)
+
+▶ STOPPED HERE — pushed `michael/fixes-oct27`. No PR opened: the user opens it and Lucas approves. Remaining: F8 on headset.

@@ -6,6 +6,7 @@ using UnityEngine.XR;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.XR.Interaction.Toolkit.Interactors.Visuals;
 using UnityEngine.XR.Interaction.Toolkit.Locomotion;
+using UnityEngine.XR.Interaction.Toolkit.Locomotion.Jump;
 using UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation;
 using UnityEngine.XR.Interaction.Toolkit.Locomotion.Turning;
 using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
@@ -31,6 +32,11 @@ public sealed class FarmWorkshopRig : MonoBehaviour
     private bool wasTrigger, wasGrip, wasRepair, wasCancel, wasMenu;
     private bool armed, wasInWorkshop, bookWanted, usingHeadFallback;
     private float teleportCooldown;
+    // Left-hand spellbook pose filter (rig space): small tremor is smoothed hard, deliberate moves follow quickly.
+    private static readonly Vector3 BookOffset = new Vector3(0f, .11f, .05f);
+    private static readonly Quaternion BookTilt = Quaternion.Euler(45f, 0f, 0f);
+    private Vector3 bookLocalPosition;
+    private Quaternion bookLocalRotation = Quaternion.identity;
     private Vector3 priorPosition;
 
     public void Configure(ArcaneGameManager manager, Transform camera, Transform left, Transform aim, GameObject hud)
@@ -57,6 +63,8 @@ public sealed class FarmWorkshopRig : MonoBehaviour
         blinkProviders = GetComponentsInChildren<LocomotionProvider>(true)
             .Where(p => p is SnapTurnProvider || p is TeleportationProvider).ToArray();
         foreach (var provider in blinkProviders) provider.locomotionStarted += Blink;
+        // Comfort: an accidental A press must never launch the player into a 1.25 m jump.
+        foreach (var jump in GetComponentsInChildren<JumpProvider>(true)) jump.enabled = false;
         priorPosition = transform.position;
         yield return null;
         bookMount = new GameObject("workshopSpellbookMount").transform;
@@ -96,7 +104,9 @@ public sealed class FarmWorkshopRig : MonoBehaviour
         bool rightBusy = Busy(rightInteractors);
         if (menu && !wasMenu && leftTracked && !leftBusy && !teleportBusy) bookWanted = !bookWanted;
         bool showBook = bookWanted && rightTracked && !leftBusy && !teleportBusy;
+        bool bookWasShown = book.gameObject.activeSelf;
         book.gameObject.SetActive(showBook);
+        if (showBook && !bookWasShown && leftTracked && !usingHeadFallback) AttachBookToHand(); // no glide from a stale pose
         if (showBook) UpdateBookPose(leftTracked);
 
         // Consume blocked presses, then require release before changing input ownership.
@@ -125,12 +135,32 @@ public sealed class FarmWorkshopRig : MonoBehaviour
     private static bool Busy(XRBaseInteractor[] interactors) => interactors != null &&
         interactors.Any(i => i.isActiveAndEnabled && (i.hasSelection || i.hasHover));
 
+    // The book lives in rig space (so locomotion and snap turns carry it rigidly) and follows the hand through a filter.
     private void AttachBookToHand()
     {
-        bookMount.SetParent(leftHand, false);
-        bookMount.localPosition = new Vector3(0f, .11f, .05f);
-        bookMount.localRotation = Quaternion.Euler(45f, 0f, 0f);
+        bookMount.SetParent(transform, false);
         bookMount.localScale = Vector3.one * .085f;
+        HandBookTarget(out bookLocalPosition, out bookLocalRotation);
+        bookMount.SetLocalPositionAndRotation(bookLocalPosition, bookLocalRotation);
+    }
+
+    private void HandBookTarget(out Vector3 position, out Quaternion rotation)
+    {
+        position = transform.InverseTransformPoint(leftHand.TransformPoint(BookOffset));
+        rotation = Quaternion.Inverse(transform.rotation) * leftHand.rotation * BookTilt;
+    }
+
+    private void FollowHand()
+    {
+        HandBookTarget(out Vector3 position, out Quaternion rotation);
+        float dt = Time.unscaledDeltaTime;
+        float move = Vector3.Distance(position, bookLocalPosition);
+        float turn = Quaternion.Angle(rotation, bookLocalRotation);
+        float moveRate = Mathf.Lerp(3f, 22f, Mathf.InverseLerp(.004f, .06f, move));
+        float turnRate = Mathf.Lerp(3f, 22f, Mathf.InverseLerp(1.5f, 20f, turn));
+        bookLocalPosition = Vector3.Lerp(bookLocalPosition, position, 1f - Mathf.Exp(-moveRate * dt));
+        bookLocalRotation = Quaternion.Slerp(bookLocalRotation, rotation, 1f - Mathf.Exp(-turnRate * dt));
+        bookMount.SetLocalPositionAndRotation(bookLocalPosition, bookLocalRotation);
     }
 
     private void UpdateBookPose(bool leftTracked)
@@ -139,6 +169,7 @@ public sealed class FarmWorkshopRig : MonoBehaviour
         {
             if (usingHeadFallback) AttachBookToHand();
             usingHeadFallback = false;
+            FollowHand();
         }
         else
         {

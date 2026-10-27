@@ -139,6 +139,9 @@ namespace ArcaneWorkshop
             return spellbook;
         }
         private TutorialBubble tutorialBubble;
+        private FeedbackToast feedbackToast;
+        private Vector3 lastPressPoint;
+        private float lastPressTime = -100f;
         private SpellbookPanel spellbook;
         private VRRig vrRig;
         private Transform spellbookMount;
@@ -171,6 +174,7 @@ namespace ArcaneWorkshop
                 merchantPortal.Initialize(this);
             }
             tutorialBubble = TutorialBubble.Create(uiPageMaterial);
+            feedbackToast = FeedbackToast.Create(uiPageMaterial);
             CreateGoals();
             TryStartVRWhenReady();
             ShowTutorial("intro", IntroMessage, Vector3.zero);
@@ -529,6 +533,9 @@ namespace ArcaneWorkshop
             {
                 return;
             }
+            // Any feedback this press produces is also shown in the world, right where the player pointed.
+            lastPressPoint = hit.point;
+            lastPressTime = Time.unscaledTime;
 
             IslandLinkGate linkGate = hit.collider.GetComponentInParent<IslandLinkGate>();
             if (linkGate != null)
@@ -670,7 +677,7 @@ namespace ArcaneWorkshop
 
             if (recipes[index].requiredUnlock == WorkshopUnlock.AdvancedAlchemy)
             {
-                return "Convergence Alchemy is locked. Deliver one Conservatory Bloom and one Astral Core to the shared inventory.";
+                return "Convergence Alchemy is locked. Order 1 Bloom at Lucas's receiver and 1 Astral Core at Justin's receiver (beside their bridge gates).";
             }
 
             return recipes[index].name + " is locked by workshop progression.";
@@ -883,8 +890,8 @@ namespace ArcaneWorkshop
                 new Goal { title = "Kindle a Mana Link", hint = "Place a Mana Still right next to your planter.", isDone = () => anyLinkEver, unlock = WorkshopUnlock.StarCauldron },
                 new Goal { title = "First Brew", hint = "Build a Star Cauldron and brew any basic recipe.", isDone = () => potionsBrewed > 0, unlock = WorkshopUnlock.CrystalAmplifier },
                 new Goal { title = "Open Trade", hint = "Sell a Potion at the Merchant Gate.", isDone = () => potionsSold > 0, unlock = WorkshopUnlock.None },
-                new Goal { title = "Complete the Chain", hint = "Own a Planter, Still, Amplifier and Cauldron at the same time. This awakens Lucas's bridge gate (west).", isDone = HasFullChain, unlock = WorkshopUnlock.None },
-                new Goal { title = "Unite the Disciplines", hint = "Order Lucas's Bloom (west gate), then Justin's Astral Core (east gate), and use the Convergence Altar.", isDone = () => advancedPotionsBrewed > 0, unlock = WorkshopUnlock.None },
+                new Goal { title = "Complete the Chain", hint = "Own a Planter, Still, Amplifier and Cauldron at the same time. This awakens Lucas's bridge gate (south-west).", isDone = HasFullChain, unlock = WorkshopUnlock.None },
+                new Goal { title = "Unite the Disciplines", hint = "Order Lucas's Bloom (south-west gate), then Justin's Astral Core (south-east gate), and trigger the Convergence Altar.", isDone = () => advancedPotionsBrewed > 0, unlock = WorkshopUnlock.None },
                 new Goal { title = "Master Alchemist", hint = "Earn 100 Gold from potion sales.", isDone = () => lifetimeSales >= 100, unlock = WorkshopUnlock.FinalRitual }
             };
         }
@@ -1631,15 +1638,26 @@ namespace ArcaneWorkshop
         public string TeamIntegrationSummary()
         {
             string outputs = "Bloom " + conservatoryBlooms + "   Astral Core " + astralCores;
+            if (workshopRestored)
+            {
+                return outputs + "\nFINAL RITUAL COMPLETE";
+            }
             if (FinalRitualReady)
             {
-                return outputs + "\nFINAL RITUAL READY";
+                return outputs + "\nFINAL RITUAL READY: 25 Gold (" + gold + ") + 2 Essence (" + essence + ")";
             }
             if (progression != null && progression.IsUnlocked(WorkshopUnlock.AdvancedAlchemy))
             {
-                return outputs + "\nCONVERGENCE ALCHEMY READY";
+                string needs = "Herb " + herbs + "/1  Crystal " + crystals + "/1  Essence " + essence + "/1" +
+                    "\nBloom " + conservatoryBlooms + "/1  Astral Core " + astralCores + "/1";
+                if (advancedPotionsBrewed == 0)
+                {
+                    return outputs + "\nCONVERGE needs " + needs;
+                }
+                return outputs + "\nRitual unlocks at 100 Gold of sales (" + lifetimeSales + "/100)" +
+                    "\nConverge again and sell: " + needs;
             }
-            return outputs + "\nDeliver both team outputs to unlock Convergence";
+            return outputs + "\nOrder 1 Bloom (Lucas gate) + 1 Astral Core (Justin gate)";
         }
 
         public void CompleteBrew(int recipeIndex, Vector3 position)
@@ -1814,6 +1832,10 @@ namespace ArcaneWorkshop
         {
             feedback = message;
             feedbackUntil = Time.unscaledTime + 4.5f;
+            if (feedbackToast != null && Time.unscaledTime - lastPressTime < 0.3f)
+            {
+                feedbackToast.Show(message, lastPressPoint);
+            }
         }
 
         public void ShowTutorial(string key, string message, Vector3 worldPosition)

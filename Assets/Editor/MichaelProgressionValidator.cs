@@ -152,6 +152,72 @@ namespace ArcaneWorkshop.Editor
             }
         }
 
+        // Layout from the headset review: mirrored diagonal gates, Merchant Gate on its own slot, grounded props,
+        // no shared wall planes, and a ritual islet the player can see but not stand on.
+        private static void RunLayoutChecks(IslandLinkGate[] gates, List<string> failures)
+        {
+            Transform lucas = null;
+            Transform justin = null;
+            foreach (IslandLinkGate gate in gates)
+            {
+                if (gate.Owner == "Lucas") lucas = gate.transform;
+                if (gate.Owner == "Justin") justin = gate.transform;
+            }
+            GameObject bridge = GameObject.Find("mainToFarmBridge");
+            if (lucas != null && bridge != null)
+            {
+                Vector3 toBridge = bridge.transform.position - lucas.position;
+                toBridge.y = 0f;
+                Check(Vector3.Angle(lucas.forward, toBridge) < 10f, "Lucas's gate must face Keliang's mainToFarmBridge.", failures);
+            }
+            if (lucas != null && justin != null)
+            {
+                Vector3 mirrored = new Vector3(-lucas.position.x, lucas.position.y, lucas.position.z);
+                Check(Vector3.Distance(mirrored, justin.position) < 0.05f, "Justin's gate must mirror Lucas's gate across the island.", failures);
+            }
+            GameObject merchant = GameObject.Find("MerchantPortal");
+            if (merchant != null)
+            {
+                foreach (IslandLinkGate gate in gates)
+                {
+                    Check(Vector3.Distance(merchant.transform.position, gate.transform.position) > 6f,
+                        "The Merchant Gate overlaps " + gate.Owner + "'s bridge gate.", failures);
+                }
+            }
+
+            GameObject environment = GameObject.Find("Arcane Workshop Environment");
+            if (environment != null)
+            {
+                foreach (Transform prop in environment.transform)
+                {
+                    float bottom = float.MaxValue;
+                    foreach (MeshRenderer renderer in prop.GetComponentsInChildren<MeshRenderer>())
+                    {
+                        bottom = Mathf.Min(bottom, renderer.bounds.min.y);
+                    }
+                    bool floorStanding = bottom > -0.16f && bottom < 0.14f && new Vector2(prop.position.x, prop.position.z).magnitude < 11f;
+                    Check(!floorStanding || bottom < -0.15f, prop.name + " hovers " + (bottom + 0.16f).ToString("F2") + " m above the floor.", failures);
+                }
+                Transform wall0 = environment.transform.Find("Workshop Wall 0");
+                Transform wall1 = environment.transform.Find("Workshop Wall 1");
+                if (wall0 != null && wall1 != null)
+                {
+                    Check(Mathf.Abs(wall0.position.z - wall1.position.z) > 0.03f, "Overlapping back-wall segments share a plane (z-fighting).", failures);
+                }
+            }
+
+            GameObject islet = GameObject.Find("Central Ritual Islet");
+            Check(islet != null, "The central ritual islet is missing.", failures);
+            if (islet != null)
+            {
+                Check(islet.GetComponentsInChildren<Collider>().Length == 0, "The ritual islet must not be walkable or teleportable.", failures);
+                FinalRitualIndicator core = UnityEngine.Object.FindAnyObjectByType<FinalRitualIndicator>();
+                Check(core != null && Vector3.Distance(new Vector3(core.transform.position.x, 0f, core.transform.position.z),
+                    new Vector3(islet.transform.position.x, 0f, islet.transform.position.z)) < 0.5f,
+                    "The Nexus Core must float above the ritual islet.", failures);
+            }
+        }
+
         private static void RunTeamExpansionChecks(List<string> failures)
         {
             Check(GameObject.Find("Michael Island Links") != null, "The Michael Island Links root (gates, receivers, altar) is missing.", failures);
@@ -185,6 +251,7 @@ namespace ArcaneWorkshop.Editor
                 "Receivers must accept Lucas's Bloom and Justin's Astral Core.", failures);
             Check(UnityEngine.Object.FindAnyObjectByType<FinalRitualIndicator>() != null, "The floating Nexus Core is missing.", failures);
             Check(GameObject.Find("Workshop Title Plaque") != null, "The visible workshop title plaque is missing.", failures);
+            RunLayoutChecks(gates, failures);
 
             GameObject managerHost = null;
             GameObject receiverHost = null;

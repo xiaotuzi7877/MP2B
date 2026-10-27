@@ -26,6 +26,17 @@ public static class MichaelIslandBuilder
     private const float IslandRadius = 11f;
     private const float RimRadius = 10.75f;
 
+    // Gate layout (yaw = facing out of the island). Keliang aligned Lucas's gate with `mainToFarmBridge` on the
+    // south-west diagonal; Justin's gate mirrors it on the south-east diagonal and the Merchant Gate takes the east slot.
+    private const float GateRadius = 9f;
+    private const float LucasYaw = 218f;
+    private const float JustinYaw = 142f;
+    private const float MerchantYaw = 90f;
+    private const float GateGapDegrees = 15f;
+
+    // Ritual islet: the centre of the three-island triangle (Michael 0,0 · Lucas -28,-36 · Justin mirrored 28,-36).
+    private static readonly Vector3 RitualIsletCenter = new Vector3(0f, 3.2f, -24f);
+
     public static readonly Color LucasColor = new Color(0.32f, 0.95f, 0.45f);
     public static readonly Color JustinColor = new Color(0.78f, 0.42f, 1f);
     private static readonly Vector3 MoonDirection = new Vector3(-0.35f, 0.55f, 0.75f);
@@ -68,13 +79,15 @@ public static class MichaelIslandBuilder
         CreateUnderside(root.transform, m);
         CreateRimBalustrade(root.transform, m);
 
+        // Lucas's real bridge (mainToFarmBridge) docks at his gate, so only Justin's gate gets a placeholder pier.
         IslandLinkGate lucasGate = CreateLinkGate(root.transform, manager, m, "Lucas", "Verdant Conservatory",
-            180f, LucasColor, m.lucasGlow, m.lucasVeil, 6, false, WorkshopResourceKind.Gold);
+            LucasYaw, false, LucasColor, m.lucasGlow, m.lucasVeil, 6, false, WorkshopResourceKind.Gold);
         IslandLinkGate justinGate = CreateLinkGate(root.transform, manager, m, "Justin", "Astral Foundry",
-            0f, JustinColor, m.justinGlow, m.justinVeil, 0, true, WorkshopResourceKind.ConservatoryBloom);
+            JustinYaw, true, JustinColor, m.justinGlow, m.justinVeil, 0, true, WorkshopResourceKind.ConservatoryBloom);
 
+        // Each receiver stands just inside its gate, on the outer flank (away from the south view to the ritual islet).
         CreateReceiver(root.transform, manager, m, lucasGate, "Lucas", WorkshopResourceKind.ConservatoryBloom,
-            new Vector3(-8.55f, 0f, -2.75f), LucasColor, m.lucasGlow,
+            BesideGate(LucasYaw, 1f), LucasColor, m.lucasGlow,
             new[]
             {
                 new WorkshopResourceAmount(WorkshopResourceKind.Water, 2),
@@ -82,7 +95,7 @@ public static class MichaelIslandBuilder
                 new WorkshopResourceAmount(WorkshopResourceKind.Gold, 6)
             });
         CreateReceiver(root.transform, manager, m, justinGate, "Justin", WorkshopResourceKind.AstralCore,
-            new Vector3(8.55f, 0f, -2.75f), JustinColor, m.justinGlow,
+            BesideGate(JustinYaw, -1f), JustinColor, m.justinGlow,
             new[]
             {
                 new WorkshopResourceAmount(WorkshopResourceKind.Crystal, 2),
@@ -91,10 +104,13 @@ public static class MichaelIslandBuilder
             });
 
         CreateConvergenceAltar(root.transform, manager, m);
+        CreateRitualIslet(root.transform, m);
         CreateNexusCore(root.transform, manager, m);
         CreateTitle(root.transform, m);
         CreateAmbientMotes(root.transform, m);
         AddPropColliders();
+        GroundMp2aProps();
+        FixWallOverlap();
         ConfigureSkyAndLighting(m);
 
         EditorSceneManager.MarkSceneDirty(scene);
@@ -245,12 +261,114 @@ public static class MichaelIslandBuilder
 
     private static void ArrangeMp2aProps()
     {
-        // Clear the two bridge corridors (west/east) and the receiver spots.
+        // Keep the two diagonal bridge gates, their receivers and the east Merchant Gate clear.
         MoveChild("Arcane Workshop Environment", "Supply Crates", new Vector3(-4.35f, 0f, 6.75f), 20f);
-        MoveChild("Arcane Workshop Environment", "Moonlit Tree 0", new Vector3(-9.2f, 0f, -4.6f), 0f);
-        MoveChild("Arcane Workshop Environment", "Moonlit Tree 2", new Vector3(-7.3f, 0f, -7.3f), 0f);
-        MoveChild("Arcane Workshop Environment", "Moonlit Tree 1", new Vector3(5.1f, 0f, -8.5f), 0f);
-        MoveChild("Arcane Workshop Environment", "Moonlit Tree 3", new Vector3(9.45f, 0f, 3.3f), 0f);
+        MoveChild("Arcane Workshop Environment", "Moonlit Tree 0", new Vector3(-9.35f, 0f, 2.3f), 0f);
+        MoveChild("Arcane Workshop Environment", "Moonlit Tree 2", new Vector3(-9.55f, 0f, -1.6f), 0f);
+        MoveChild("Arcane Workshop Environment", "Moonlit Tree 1", new Vector3(8.95f, 0f, -2.7f), 0f);
+        MoveChild("Arcane Workshop Environment", "Moonlit Tree 3", new Vector3(9.3f, 0f, 3.5f), 0f);
+        MoveMerchantGate();
+    }
+
+    private static Vector3 YawDirection(float yaw)
+    {
+        return Quaternion.Euler(0f, yaw, 0f) * Vector3.forward;
+    }
+
+    // A receiver spot just inside a gate: side +1 = the gate's local right, -1 = its left.
+    private static Vector3 BesideGate(float yaw, float side)
+    {
+        Quaternion rotation = Quaternion.Euler(0f, yaw, 0f);
+        return rotation * new Vector3(side * 3.25f, 0f, GateRadius - 0.9f);
+    }
+
+    // The Merchant Gate is an MP2A prefab instance with a world-space delivery path; swing it around the island
+    // centre so its distance from the centre stays the same.
+    private static void MoveMerchantGate()
+    {
+        GameObject portalObject = GameObject.Find("MerchantPortal");
+        MerchantPortal portal = portalObject != null ? portalObject.GetComponent<MerchantPortal>() : null;
+        if (portal == null)
+        {
+            return;
+        }
+        Vector3 flat = new Vector3(portalObject.transform.position.x, 0f, portalObject.transform.position.z);
+        float currentYaw = Mathf.Atan2(flat.x, flat.z) * Mathf.Rad2Deg;
+        float delta = Mathf.DeltaAngle(currentYaw, MerchantYaw);
+        if (Mathf.Abs(delta) < 0.01f)
+        {
+            return;
+        }
+        Quaternion swing = Quaternion.Euler(0f, delta, 0f);
+        portalObject.transform.SetPositionAndRotation(swing * portalObject.transform.position,
+            swing * portalObject.transform.rotation);
+        SerializedObject serialized = new SerializedObject(portal);
+        // The route starts at the potion shelf and ends at the gate: keep the start, swing later points progressively.
+        SerializedProperty path = serialized.FindProperty("deliveryPath");
+        for (int i = 1; i < path.arraySize; i++)
+        {
+            SerializedProperty point = path.GetArrayElementAtIndex(i);
+            float share = i / (float)(path.arraySize - 1);
+            point.vector3Value = Quaternion.Euler(0f, delta * share, 0f) * point.vector3Value;
+        }
+        serialized.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    // MP2A placed its props at y = 0, but the paved floor surface is at FloorTop, so they hovered 16 cm.
+    // Drop every floor-standing prop (bottom within 30 cm above the floor) onto the paving. Idempotent.
+    private static void GroundMp2aProps()
+    {
+        List<Transform> props = new List<Transform>();
+        GameObject environment = GameObject.Find("Arcane Workshop Environment");
+        if (environment != null)
+        {
+            foreach (Transform child in environment.transform)
+            {
+                props.Add(child);
+            }
+        }
+        GameObject portal = GameObject.Find("MerchantPortal");
+        if (portal != null)
+        {
+            props.Add(portal.transform);
+        }
+        foreach (Transform prop in props)
+        {
+            Renderer[] renderers = prop.GetComponentsInChildren<Renderer>();
+            float bottom = float.MaxValue;
+            foreach (Renderer renderer in renderers)
+            {
+                if (renderer is MeshRenderer && renderer.enabled)
+                {
+                    bottom = Mathf.Min(bottom, renderer.bounds.min.y);
+                }
+            }
+            Vector3 flat = new Vector3(prop.position.x, 0f, prop.position.z);
+            if (bottom == float.MaxValue || flat.magnitude > IslandRadius || bottom <= FloorTop + 0.005f || bottom > FloorTop + 0.3f)
+            {
+                continue;
+            }
+            prop.position += Vector3.down * (bottom - FloorTop);
+        }
+    }
+
+    // The five back-wall segments are 6.6 m wide but spaced 3.35 m apart, so neighbours share the same front and
+    // back planes and z-fight (the shimmering castle texture in the headset). Push the two plain fill segments a
+    // few centimetres behind the arched/window segments so every visible face has a single owner.
+    private static void FixWallOverlap()
+    {
+        GameObject environment = GameObject.Find("Arcane Workshop Environment");
+        if (environment == null)
+        {
+            return;
+        }
+        foreach (Transform child in environment.transform)
+        {
+            if (child.name == "Workshop Wall 1" || child.name == "Workshop Wall 3")
+            {
+                child.position = new Vector3(child.position.x, -0.17f, 9.23f);
+            }
+        }
     }
 
     private static void MoveChild(string rootName, string childName, Vector3 position, float yaw)
@@ -369,15 +487,16 @@ public static class MichaelIslandBuilder
         float step = panelScale / RimRadius;
         int count = Mathf.FloorToInt(Mathf.PI * 2f / step);
         step = Mathf.PI * 2f / count;
-        Vector3 merchant = new Vector3(8.4f, 0f, -5.6f);
         for (int i = 0; i < count; i++)
         {
             float angle = i * step;
             Vector3 radial = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
             Vector3 position = radial * RimRadius;
-            if (Mathf.Abs(position.z) < 2.3f || position.z > 6.6f || (position - merchant).magnitude < 2.6f)
+            float yaw = Mathf.Atan2(radial.x, radial.z) * Mathf.Rad2Deg;
+            if (position.z > 6.6f || NearYaw(yaw, LucasYaw, GateGapDegrees) || NearYaw(yaw, JustinYaw, GateGapDegrees) ||
+                NearYaw(yaw, MerchantYaw, 11f))
             {
-                continue; // bridge corridors, back workshop wall, merchant gate
+                continue; // back workshop wall, both bridge gates, merchant gate
             }
             Vector3 tangent = new Vector3(-radial.z, 0f, radial.x);
             Quaternion rotation = Quaternion.LookRotation(tangent, Vector3.up);
@@ -400,17 +519,21 @@ public static class MichaelIslandBuilder
         }
     }
 
+    private static bool NearYaw(float yaw, float target, float halfWidth)
+    {
+        return Mathf.Abs(Mathf.DeltaAngle(yaw, target)) < halfWidth;
+    }
+
     // ------------------------------------------------------------------ bridge gates
 
     private static IslandLinkGate CreateLinkGate(Transform parent, ArcaneGameManager manager, Materials m,
-        string owner, string title, float angleDegrees, Color accent, Material glow, Material veilMaterial,
+        string owner, string title, float yaw, bool placeholderPier, Color accent, Material glow, Material veilMaterial,
         int goals, bool needsDelivery, WorkshopResourceKind deliveryKind)
     {
-        float angle = angleDegrees * Mathf.Deg2Rad;
-        Vector3 outward = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+        Vector3 outward = YawDirection(yaw);
         GameObject gate = new GameObject(owner + " Bridge Gate");
         gate.transform.SetParent(parent, false);
-        gate.transform.position = outward * 10.35f + Vector3.up * FloorTop;
+        gate.transform.position = outward * GateRadius + Vector3.up * FloorTop;
         gate.transform.rotation = Quaternion.LookRotation(outward, Vector3.up);
         Transform t = gate.transform;
 
@@ -423,10 +546,13 @@ public static class MichaelIslandBuilder
             new Vector3(4.6f, 0.14f, 2.2f), m.rimStone).GetComponent<Collider>().enabled = false;
         CreatePrimitive(owner + " Threshold Inlay", PrimitiveType.Cube, t, new Vector3(0f, 0.125f, 0.35f),
             new Vector3(3.2f, 0.02f, 0.14f), glow).GetComponent<Collider>().enabled = false;
-        CreateWoodPier(t, owner, m);
-        TextMesh pierSign = CreateLabel(t, owner.ToUpperInvariant() + "'S BRIDGE DOCKS HERE", new Vector3(0f, 1.35f, 7.1f),
-            0.028f, 48, true);
-        pierSign.color = Color.Lerp(accent, Color.white, 0.4f);
+        if (placeholderPier)
+        {
+            CreateWoodPier(t, owner, m);
+            TextMesh pierSign = CreateLabel(t, owner.ToUpperInvariant() + "'S BRIDGE DOCKS HERE", new Vector3(0f, 1.35f, 7.1f),
+                0.028f, 48, true);
+            pierSign.color = Color.Lerp(accent, Color.white, 0.4f);
+        }
 
         // Twin hexagonal towers holding the ring.
         for (int side = -1; side <= 1; side += 2)
@@ -683,7 +809,7 @@ public static class MichaelIslandBuilder
 
         CreateImported("Altar Basin", Town + "fountain-round-detail.fbx", t, Vector3.zero, Vector3.zero,
             new Vector3(1.25f, 1.1f, 1.25f), m.rimStone);
-        CreateImported("Altar Gold Focus", Town + "fountain-center.fbx", t, Vector3.zero, Vector3.zero,
+        CreateImported("Altar Gold Focus", Town + "fountain-center.fbx", t, new Vector3(0f, 0.012f, 0f), Vector3.zero,
             new Vector3(1.25f, 1.1f, 1.25f), m.gold);
 
         GameObject triad = new GameObject("Altar Orbit");
@@ -730,10 +856,10 @@ public static class MichaelIslandBuilder
 
     private static void CreateNexusCore(Transform parent, ArcaneGameManager manager, Materials m)
     {
-        // Floats high in the void beyond the workshop wall, inside the three-island triangle. No floor.
+        // Hovers above the ritual islet at the centre of the three islands.
         GameObject nexus = new GameObject("Floating Nexus Core");
         nexus.transform.SetParent(parent, false);
-        nexus.transform.position = new Vector3(0f, 11.5f, 27f);
+        nexus.transform.position = RitualIsletCenter + Vector3.up * 1.6f;
         FinalRitualIndicator indicator = nexus.AddComponent<FinalRitualIndicator>();
 
         BoxCollider collider = nexus.AddComponent<BoxCollider>();
@@ -765,6 +891,64 @@ public static class MichaelIslandBuilder
         Light light = CreatePointLight("Nexus Light", nexus.transform, new Vector3(0f, 2.2f, 2f), new Color(0.32f, 0.42f, 0.72f), 0.65f, 14f);
         nexus.AddComponent<HoverHighlight>().Configure(label);
         indicator.Configure(manager, crystalRoot.transform, label, core.GetComponent<Renderer>(), light);
+    }
+
+    // Small floating islet under the Nexus Core: a paved ritual circle, standing stones and a rock root.
+    // Deliberately unreachable: no collider on the walkable surface and no teleport area, so the player only sees it.
+    private static void CreateRitualIslet(Transform parent, Materials m)
+    {
+        GameObject islet = new GameObject("Central Ritual Islet");
+        islet.transform.SetParent(parent, false);
+        islet.transform.position = RitualIsletCenter;
+        Transform t = islet.transform;
+
+        GameObject top = CreatePrimitive("Ritual Islet Paving", PrimitiveType.Cylinder, t, new Vector3(0f, -0.15f, 0f),
+            new Vector3(9f, 0.15f, 9f), m.paving);
+        Object.DestroyImmediate(top.GetComponent<Collider>());
+        GameObject rim = CreatePrimitive("Ritual Islet Rim", PrimitiveType.Cylinder, t, new Vector3(0f, -0.2f, 0f),
+            new Vector3(9.5f, 0.16f, 9.5f), m.rimStone);
+        Object.DestroyImmediate(rim.GetComponent<Collider>());
+
+        GameObject root = new GameObject("Ritual Islet Rock");
+        root.transform.SetParent(t, false);
+        root.transform.localPosition = new Vector3(0f, -0.35f, 0f);
+        root.transform.localScale = new Vector3(0.43f, 0.5f, 0.43f);
+        root.AddComponent<MeshFilter>().sharedMesh = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/Meshes/MichaelIslandUnderside.asset");
+        MeshRenderer rock = root.AddComponent<MeshRenderer>();
+        rock.sharedMaterial = m.rock;
+        rock.shadowCastingMode = ShadowCastingMode.Off;
+        for (int i = 0; i < 5; i++)
+        {
+            float a = (i * 72f + 20f) * Mathf.Deg2Rad;
+            CreateImported("Ritual Islet Boulder " + i, Castle + "rocks-large.fbx", t,
+                new Vector3(Mathf.Cos(a) * 3.4f, -1.3f - (i % 2) * 0.7f, Mathf.Sin(a) * 3.4f),
+                new Vector3(180f, i * 61f, 0f), Vector3.one * (1.4f + (i % 3) * 0.3f), m.rock);
+        }
+
+        // Six standing stones, one pair per island colour, facing the centre.
+        Material[] glows = { m.lucasGlow, m.justinGlow, m.nexusGlow };
+        for (int i = 0; i < 6; i++)
+        {
+            float a = (i * 60f + 30f) * Mathf.Deg2Rad;
+            Vector3 position = new Vector3(Mathf.Cos(a) * 3.55f, 0f, Mathf.Sin(a) * 3.55f);
+            GameObject stone = CreateImported("Ritual Standing Stone " + i, Town + "pillar-stone.fbx", t, position,
+                Vector3.zero, new Vector3(1.5f, 1.9f, 1.5f), m.rimStone);
+            if (stone != null)
+            {
+                foreach (Collider collider in stone.GetComponentsInChildren<Collider>())
+                {
+                    Object.DestroyImmediate(collider);
+                }
+            }
+            GameObject gem = CreateMeshObject("Ritual Stone Gem " + i, CrystalMesh(), t, position + Vector3.up * 2.25f,
+                Vector3.zero, new Vector3(0.22f, 0.2f, 0.22f), glows[(i / 2) % 3]);
+            gem.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
+        }
+        Mesh circle = TorusMesh("RitualIsletCircle", 2.6f, 0.05f, 56, 4);
+        GameObject inlay = CreateMeshObject("Ritual Circle Inlay", circle, t, new Vector3(0f, 0.01f, 0f),
+            new Vector3(90f, 0f, 0f), Vector3.one, m.rune);
+        inlay.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
+        CreatePointLight("Ritual Islet Glow", t, new Vector3(0f, 1.2f, 0f), new Color(0.45f, 0.55f, 1f), 1.4f, 9f);
     }
 
     private static void CreateTitle(Transform parent, Materials m)
@@ -925,7 +1109,11 @@ public static class MichaelIslandBuilder
             key.intensity = 0.95f;
             key.shadows = LightShadows.Soft;
             key.shadowStrength = 0.55f;
+            // Larger biases stop the striped shadow acne that crawled over the castle wall.
+            key.shadowBias = 0.12f;
+            key.shadowNormalBias = 0.8f;
         }
+        ConfigureQuestQuality();
         // Torches keep their glow but drop shadow maps: four shadowed point lights are too heavy for Quest.
         foreach (Light light in Object.FindObjectsByType<Light>())
         {
@@ -935,6 +1123,34 @@ public static class MichaelIslandBuilder
             }
         }
         DynamicGI.UpdateEnvironment();
+    }
+
+    // The Quest build (Android default quality level) renders without real-time shadow maps: at that resolution
+    // they shimmer with every head movement and two shadowed directional lights (moon + farm sun) cost frames,
+    // and dropped frames are the main source of VR discomfort. Desktop quality levels keep their shadows.
+    private static void ConfigureQuestQuality()
+    {
+        Object asset = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/QualitySettings.asset")[0];
+        SerializedObject quality = new SerializedObject(asset);
+        SerializedProperty levels = quality.FindProperty("m_QualitySettings");
+        SerializedProperty defaults = quality.FindProperty("m_PerPlatformDefaultQuality");
+        int androidLevel = -1;
+        for (int i = 0; i < defaults.arraySize; i++)
+        {
+            SerializedProperty entry = defaults.GetArrayElementAtIndex(i);
+            if (entry.FindPropertyRelative("first").stringValue == "Android")
+            {
+                androidLevel = entry.FindPropertyRelative("second").intValue;
+            }
+        }
+        if (androidLevel < 0 || androidLevel >= levels.arraySize)
+        {
+            return;
+        }
+        SerializedProperty level = levels.GetArrayElementAtIndex(androidLevel);
+        level.FindPropertyRelative("shadows").intValue = 0;
+        quality.ApplyModifiedPropertiesWithoutUndo();
+        AssetDatabase.SaveAssets();
     }
 
     // ------------------------------------------------------------------ helpers
