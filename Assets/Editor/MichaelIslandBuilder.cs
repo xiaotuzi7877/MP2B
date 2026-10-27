@@ -625,11 +625,17 @@ public static class MichaelIslandBuilder
         hum.maxDistance = 11f;
         hum.rolloffMode = AudioRolloffMode.Linear;
 
-        // Solid barrier in the ring: clickable, blocks the pointer-walk and the VR body until linked.
+        // Barrier in the ring: always clickable. Where only a placeholder pier waits (Justin) it is solid, so nobody
+        // walks off the island; where a real teammate bridge docks (Lucas: mainToFarmBridge) it is a trigger, so the
+        // player can walk across to the farm while the gate still answers the pointer.
         BoxCollider barrier = gate.AddComponent<BoxCollider>();
         barrier.center = new Vector3(0f, 1.9f, 0.3f);
         barrier.size = new Vector3(5.6f, 3.9f, 0.7f);
-        gate.AddComponent<WalkBlocker>();
+        barrier.isTrigger = !placeholderPier;
+        if (placeholderPier)
+        {
+            gate.AddComponent<WalkBlocker>();
+        }
 
         gate.AddComponent<HoverHighlight>().Configure(label);
         IslandLinkGate link = gate.AddComponent<IslandLinkGate>();
