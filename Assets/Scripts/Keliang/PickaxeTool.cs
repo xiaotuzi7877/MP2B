@@ -17,6 +17,7 @@ public class PickaxeTool : MonoBehaviour
     {
         if (!grabInteractable.isSelected || Time.time < nextHit)
             return false;
+        if (MiningLocked()) { nextHit = Time.time + .75f; return false; }
         if (!boulder.Hit(IsUpgraded ? 1.5f : 1f))
             return false;
         nextHit = Time.time + .25f;
@@ -27,6 +28,7 @@ public class PickaxeTool : MonoBehaviour
 
     public bool Upgrade()
     {
+        if (MiningLocked()) return false;
         if (IsUpgraded) { feedback.Failure("Pickaxe already upgraded"); return false; }
         if (!resources.TrySpend(FarmResource.PickaxeKit, 1))
         { feedback.Failure("Buy a pickaxe kit first"); return false; }
@@ -34,6 +36,14 @@ public class PickaxeTool : MonoBehaviour
         basicVisual.SetActive(false);
         upgradedVisual.SetActive(true);
         feedback.Success("Pickaxe upgraded: 3 hits -> 2");
+        return true;
+    }
+
+    private bool MiningLocked()
+    {
+        if (resources.Progression == null || resources.Progression.MiningUnlocked) return false;
+        resources.Progression.ClearGuide();
+        feedback.Failure("Mining locked. Plant and water a Moon Herb first. Nothing spent.\nNext: " + resources.Progression.CurrentGoal);
         return true;
     }
 }
