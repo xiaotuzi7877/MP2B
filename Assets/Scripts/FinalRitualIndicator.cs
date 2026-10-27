@@ -2,9 +2,9 @@ using UnityEngine;
 
 namespace ArcaneWorkshop
 {
-    // Floating Nexus Core in the void between the three islands. Presentation-only: no floor, no teleport
-    // target, no inventory. It mirrors Final Ritual progress; the ritual itself starts at Michael's
-    // Convergence Altar, and the Core answers by resonating.
+    // Floating Nexus Core above the ritual islet between the three islands. No walkable floor, no teleport
+    // target, no inventory. It mirrors Final Ritual progress; once ready, triggering it (or Michael's
+    // Convergence Altar) begins the ritual, and the Core answers by resonating.
     public sealed class FinalRitualIndicator : MonoBehaviour
     {
         private enum SignalState { Dormant, Ready, Resonating }
@@ -77,9 +77,9 @@ namespace ArcaneWorkshop
                 case SignalState.Resonating:
                     return "The Nexus Core resonates. Michael Island's Convergence Ritual is complete.";
                 case SignalState.Ready:
-                    return "Nexus Core aligned. Begin the Final Ritual at the Convergence Altar (25 Gold + 2 Essence).";
+                    return "Nexus Core aligned. Trigger the Core or the Convergence Altar to begin the Final Ritual (25 Gold + 2 Essence).";
                 default:
-                    return "Nexus Core dormant. Complete every Michael Island restoration goal to align it.";
+                    return "Nexus Core dormant. " + manager.GoalSummary().Replace("\n", " ");
             }
         }
 
@@ -96,6 +96,12 @@ namespace ArcaneWorkshop
             }
 
             SignalState state = CurrentState();
+            if (state == SignalState.Ready)
+            {
+                // Players naturally aim at the Core itself, so it starts the ritual too (same cost and checks).
+                manager.TryPerformFinalRitual();
+                return;
+            }
             manager.SetFeedback(InteractionHint());
             ArcaneAudio.Play2D(state == SignalState.Dormant ? SoundId.UiError : SoundId.UiSelect);
         }

@@ -300,12 +300,11 @@ namespace ArcaneWorkshop
                 return;
             }
 
-            if (manager.TryPerformConvergenceBrew(transform.position))
+            // On failure TryPerformConvergenceBrew has already set the exact reason (locked / missing ingredients).
+            if (!manager.TryPerformConvergenceBrew(transform.position))
             {
-                return;
+                ArcaneAudio.Play(SoundId.UiError, transform.position);
             }
-
-            manager.SetFeedback("The Nexus needs one Conservatory Bloom, one Astral Core, and the listed basic ingredients.");
         }
 
         private void RefreshLabel()

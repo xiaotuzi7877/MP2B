@@ -42,23 +42,28 @@ Michael's island keeps the full MP2A Arcane Workshop (round floating island, 7×
 Merchant Gate, Falling Stars, Integrity/repair, seven restoration goals) and unfolds into the three-island MP2B campaign:
 
 1. **Goals 1–6 (MP2A loop)** teach foundations, planting, mana links, brewing, selling, and the full production chain.
-2. **Lucas's bridge gate (west rim)** awakens when goal 6 is complete. Its receiver orders a **Conservatory Bloom**
+2. **Lucas's bridge gate (south-west rim, facing `mainToFarmBridge`)** awakens when goal 6 is complete. Its receiver orders a **Conservatory Bloom**
    (2 Water + 1 Moon Herb + 6 Gold); a crate crosses the gate and lands on the pedestal.
-3. **Justin's bridge gate (east rim)** awakens after the first Bloom arrives. Its receiver orders an **Astral Core**
+3. **Justin's bridge gate (south-east rim, mirroring Lucas's)** awakens after the first Bloom arrives. Its receiver orders an **Astral Core**
    (2 Crystal + 1 Essence + 6 Gold).
 4. With both, the **Convergence Altar** (back wall) brews the Convergence Elixir (goal 7); 100 Gold of sales unlocks the
    **Final Ritual** at the same altar (goal 8).
-5. The **Nexus Core** floats in the void above the workshop — dormant (blue), aligned (gold), resonating (white) after the ritual.
+5. The **Nexus Core** floats over the unreachable **ritual islet** at the centre of the three islands (0, 3.2, -24) — dormant (blue),
+   aligned (gold), resonating (white). Once aligned, triggering the Core or the altar begins the Final Ritual.
+6. The **Merchant Gate** sits on the east rim. Every refused or accepted press also shows a short world-space message on the
+   line of sight, because in the headset the spellbook feedback line is easy to miss.
 
 Controls are unchanged from MP2A (mouse/keyboard on desktop, wand ray + spellbook in VR). Gates, receivers, the altar and the
 Nexus answer both click/trigger and right-click/grip, and their labels grow under the pointer.
 Walls, furniture, trees, gates and pedestals are solid in VR: smooth walking slides along them and teleports cannot land inside them.
+Comfort on Quest: the XRI jump is off, the left-hand spellbook follows the hand through a tremor filter, and the Android
+quality level renders without real-time shadow maps (they shimmered with head motion and cost frames).
 
 ### Integration points for teammates (MP2C)
 
 - `TeammateDeliveryReceiver.Receive(amount, "Lucas's island", optionalModel)` — deliver Blooms / Astral Cores from a teammate scene.
-- `IslandLinkGate.Link()` — call once the teammate bridge exists; it drops the safety barrier. Lucas docks on the west pier
-  (matching `mainToFarmBridge`), Justin on the east pier.
+- `IslandLinkGate.Link()` — call once the teammate bridge exists; it drops the safety barrier. Lucas docks at the south-west gate
+  (Keliang's `mainToFarmBridge`), Justin on the south-east pier.
 - `ArcaneGameManager.RegisterTeammateOutput(kind, amount, source)` — shared-inventory API used by both of the above.
 
 ### Rebuild and validate
