@@ -34,15 +34,38 @@ The Android package ID is `com.cs417.arcaneworkshop.mp2b`, so MP2B can be instal
 - tutorial bubbles, world labels, audio feedback, seven restoration goals, and the ending celebration
 - blue/purple moon-magic materials, animated rune/flow textures, distorted brew shader, third-party environment models, and licensed audio
 
-## Implemented MP2B team expansion
+## Michael Island (MP2B)
 
-- Justin's **Arcane Conservatory** turns Water and Essence into plant Growth, Moisture, Fertility, Pollination, and Familiar Bond; a completed cycle produces two `ConservatoryBloom` resources.
-- Lucas's **Astral Foundry** captures Star Fragments, charges Rune Power, consumes one Bloom as an organic binder, forges an `AstralCore`, and can intercept Falling Stars with its Shield.
-- Michael's **Convergence Nexus** connects both teammate loops to Convergence Alchemy and exposes the player-triggered Final Ritual after the shared campaign is ready.
-- The main scene now includes three visibly distinct districts, a large MP2B world title, and rune paths showing the cross-team resource flow.
-- The existing mouse, controller-ray, resource, unlock, spellbook, feedback, and Quest/OpenXR systems remain the shared interaction foundation.
+![Michael Island](Documentation/MICHAEL_ISLAND_PREVIEW.png)
 
-See [`Documentation/MP2B_TEAM_PREVIEW.png`](Documentation/MP2B_TEAM_PREVIEW.png) for the authored scene overview and [`Documentation/TEAM_COMPLETION_LOG.md`](Documentation/TEAM_COMPLETION_LOG.md) for benchmark and validation evidence.
+Michael's island keeps the full MP2A Arcane Workshop (round floating island, 7×7 rune grid, five machines, wild materials,
+Merchant Gate, Falling Stars, Integrity/repair, seven restoration goals) and unfolds into the three-island MP2B campaign:
+
+1. **Goals 1–6 (MP2A loop)** teach foundations, planting, mana links, brewing, selling, and the full production chain.
+2. **Lucas's bridge gate (west rim)** awakens when goal 6 is complete. Its receiver orders a **Conservatory Bloom**
+   (2 Water + 1 Moon Herb + 6 Gold); a crate crosses the gate and lands on the pedestal.
+3. **Justin's bridge gate (east rim)** awakens after the first Bloom arrives. Its receiver orders an **Astral Core**
+   (2 Crystal + 1 Essence + 6 Gold).
+4. With both, the **Convergence Altar** (back wall) brews the Convergence Elixir (goal 7); 100 Gold of sales unlocks the
+   **Final Ritual** at the same altar (goal 8).
+5. The **Nexus Core** floats in the void above the workshop — dormant (blue), aligned (gold), resonating (white) after the ritual.
+
+Controls are unchanged from MP2A (mouse/keyboard on desktop, wand ray + spellbook in VR). Gates, receivers, the altar and the
+Nexus answer both click/trigger and right-click/grip, and their labels grow under the pointer.
+Walls, furniture, trees, gates and pedestals are solid in VR: smooth walking slides along them and teleports cannot land inside them.
+
+### Integration points for teammates (MP2C)
+
+- `TeammateDeliveryReceiver.Receive(amount, "Lucas's island", optionalModel)` — deliver Blooms / Astral Cores from a teammate scene.
+- `IslandLinkGate.Link()` — call once the teammate bridge exists; it drops the safety barrier. Lucas docks on the west pier
+  (matching `mainToFarmBridge`), Justin on the east pier.
+- `ArcaneGameManager.RegisterTeammateOutput(kind, amount, source)` — shared-inventory API used by both of the above.
+
+### Rebuild and validate
+
+- **MP2B › Build Michael Island** re-authors the MP2B layer (gates, receivers, altar, Nexus, rim, underside, sky, lighting, colliders). Safe to re-run.
+- **MP2B › Validate Michael Progression** runs 46 editor checks (progression, recipes, receivers, gates, scene contract).
+- Progress and hand-off notes: [`Documentation/CLAUDE_WORK_LOG.md`](Documentation/CLAUDE_WORK_LOG.md).
 
 ## Repository boundaries
 
@@ -53,7 +76,7 @@ See `Documentation/MP2B_SETUP.md` for ownership, extension points, and the compl
 ## Collaboration rules
 
 - `main` must stay buildable.
-- Develop on `feature/michael-progression`, `feature/justin-conservatory`, or `feature/lucas-foundry`.
+- Develop on a personal branch (Michael: `michael/island-final`) and merge into `main` when it builds and validates.
 - Use Pull Requests and request one teammate review before merging.
 - Build features in separate test scenes and prefabs; avoid simultaneous edits to `ArcaneWorkshop.unity`.
 - Keep `.meta` files with their Unity assets.
@@ -61,4 +84,7 @@ See `Documentation/MP2B_SETUP.md` for ownership, extension points, and the compl
 
 ## Third-party assets
 
-The project contains a curated CC0 subset of KayKit Dungeon Remastered, Kenney Nature Kit, and Kenney audio packs. License copies are stored under `Assets/ThirdParty/Licenses/`.
+The project contains curated CC0 subsets of KayKit Dungeon Remastered, Kenney Nature Kit, Kenney Fantasy Town Kit,
+Kenney Castle Kit, Kenney audio packs, and ambientCG textures (PavingStones070, Rock030). License copies and source notes are
+stored under `Assets/ThirdParty/` (`Licenses/` and each pack's `SOURCE.md`). The night sky, ambience, and crystal/torus meshes
+are generated by project code.

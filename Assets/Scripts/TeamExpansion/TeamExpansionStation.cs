@@ -331,8 +331,8 @@ namespace ArcaneWorkshop
                     break;
                 default:
                     string summary = manager == null ? "Awaiting workshop link" : manager.TeamIntegrationSummary();
-                    statusLabel.text = "MICHAEL — CONVERGENCE NEXUS\n" + summary +
-                        "\nUSE: Converge / Final Ritual\nSHIFT+USE: Inspect requirements";
+                    statusLabel.text = "MICHAEL — CONVERGENCE ALTAR\n" + summary +
+                        "\nCLICK / TRIGGER: Converge  •  Final Ritual";
                     break;
             }
         }

@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: ArcaneNightSky
+  m_Shader: {fileID: 4800000, guid: c91806ccfddb94f418982cfa8daea71b, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs: []
+    m_Ints: []
+    m_Floats:
+    - _MoonSize: 0.035
+    - _StarBrightness: 1.4
+    - _StarDensity: 260
+    m_Colors:
+    - _GroundColor: {r: 0.03, g: 0.025, b: 0.07, a: 1}
+    - _HorizonColor: {r: 0.16, g: 0.12, b: 0.32, a: 1}
+    - _MoonColor: {r: 0.86, g: 0.92, b: 1, a: 1}
+    - _MoonDirection: {r: -0.35, g: 0.55, b: 0.75, a: 0}
+    - _NebulaColor: {r: 0.42, g: 0.22, b: 0.75, a: 1}
+    - _ZenithColor: {r: 0.015, g: 0.02, b: 0.07, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

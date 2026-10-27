@@ -10,8 +10,13 @@ namespace ArcaneWorkshop
         private const float MaxDistanceScale = 1.6f;
 
         private float baseWorldScale = -1f;
+        [SerializeField] private bool scaleWithDistance = true;
 
-        public bool ScaleWithDistance { get; set; } = true;
+        public bool ScaleWithDistance
+        {
+            get { return scaleWithDistance; }
+            set { scaleWithDistance = value; }
+        }
 
         private void LateUpdate()
         {
@@ -23,7 +28,7 @@ namespace ArcaneWorkshop
             Vector3 cameraPosition = Camera.main.transform.position;
             transform.rotation = Quaternion.LookRotation(transform.position - cameraPosition, Vector3.up);
 
-            if (!ScaleWithDistance)
+            if (!scaleWithDistance)
             {
                 return;
             }
