@@ -75,6 +75,8 @@ public static class MichaelIslandSceneBuilder
         Material stoneDark = CreateMaterial("AtelierVoidRock", new Color(0.055f, 0.075f, 0.14f), 0.02f, 0.72f);
         Material gold = CreateMaterial("AtelierGold", new Color(0.86f, 0.56f, 0.12f), 0.34f, 0.42f);
         Material blueGlass = CreateMaterial("AtelierBlueGlass", new Color(0.08f, 0.48f, 0.95f), 0.58f, 0.25f);
+        Material lucasGreen = CreateMaterial("AtelierLucasGate", new Color(0.18f, 0.92f, 0.58f), 0.72f, 0.5f);
+        Material justinMagenta = CreateMaterial("AtelierJustinGate", new Color(0.92f, 0.18f, 0.86f), 0.72f, 0.5f);
         Material floor = AssetDatabase.LoadAssetAtPath<Material>(MaterialFolder + "/Floor.mat");
         Material rune = AssetDatabase.LoadAssetAtPath<Material>(MaterialFolder + "/Rune.mat");
 
@@ -94,8 +96,50 @@ public static class MichaelIslandSceneBuilder
         Transform justin = CreateAnchor(root.transform, "Justin Gate Anchor", new Vector3(7.9f, 0f, -5.65f), Quaternion.Euler(0f, 34f, 0f));
         Transform nexus = CreateAnchor(root.transform, "Nexus Indicator Anchor", new Vector3(0f, 0f, -11.6f), Quaternion.identity);
         layout.Configure(grid, spawn, lucas, justin, nexus, WalkablePolygon);
+        CreateFutureGate(lucas, "Lucas Island", "Lucas", lucasGreen, stone, gold);
+        CreateFutureGate(justin, "Justin Island", "Justin", justinMagenta, stone, gold);
 
         RepositionExistingSceneObjects();
+    }
+
+    private static void CreateFutureGate(Transform anchor, string destination, string owner, Material accent, Material stone, Material gold)
+    {
+        GameObject gate = new GameObject(destination + " Reserved Link Gate");
+        gate.transform.SetParent(anchor, false);
+        FutureIslandGate futureGate = gate.AddComponent<FutureIslandGate>();
+        futureGate.Configure(destination, owner, false);
+
+        BoxCollider safetySeal = gate.AddComponent<BoxCollider>();
+        safetySeal.center = new Vector3(0f, 1.35f, 0.16f);
+        safetySeal.size = new Vector3(3.45f, 2.7f, 0.58f);
+
+        CreateImported(destination + " Gate Arch", FantasyTownFolder + "/wall-doorway-round.fbx", gate.transform,
+            new Vector3(0f, 0f, 0.15f), Vector3.zero, Vector3.one * 2.75f, stone);
+        CreateImported(destination + " Gate Crown", FantasyTownFolder + "/wall-arch-top-detail.fbx", gate.transform,
+            new Vector3(0f, 3.72f, 0.15f), Vector3.zero, Vector3.one * 2.75f, gold);
+        CreateImported(destination + " Gate Left Pillar", FantasyTownFolder + "/pillar-stone.fbx", gate.transform,
+            new Vector3(-1.78f, 0f, 0.15f), Vector3.zero, Vector3.one * 2.65f, stone);
+        CreateImported(destination + " Gate Right Pillar", FantasyTownFolder + "/pillar-stone.fbx", gate.transform,
+            new Vector3(1.78f, 0f, 0.15f), Vector3.zero, Vector3.one * 2.65f, stone);
+
+        CreateBeam(destination + " Safety Rail", gate.transform, new Vector3(-1.45f, 0.72f, -0.08f),
+            new Vector3(1.45f, 0.72f, -0.08f), 0.13f, 0.13f, accent);
+        CreatePrimitive(destination + " Link Seal", PrimitiveType.Sphere, gate.transform,
+            new Vector3(0f, 1.72f, 0.08f), Vector3.one * 0.46f, accent).GetComponent<Collider>().enabled = false;
+
+        Mesh ringMesh = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/Meshes/RuneRing.asset");
+        if (ringMesh != null)
+        {
+            CreateMeshObject(destination + " Link Ring", ringMesh, gate.transform, new Vector3(0f, 1.72f, 0.08f),
+                new Vector3(90f, 0f, 0f), Vector3.one * 1.18f, accent);
+        }
+
+        TextMesh title = CreateLabel(gate.transform,
+            destination.ToUpperInvariant() + " LINK\nRESERVED  •  SAFE",
+            new Vector3(0f, 4.45f, 0f), 0.043f, 58, TextAnchor.MiddleCenter);
+        title.color = accent.color;
+        CreatePointLight(destination + " Gate Light", gate.transform,
+            new Vector3(0f, 2f, -0.4f), accent.color, 1.3f, 5.5f);
     }
 
     private static void CreateTriangleSurface(Transform parent, Material material)
@@ -279,7 +323,7 @@ public static class MichaelIslandSceneBuilder
             Vector3.one * 0.78f, blueGlass).GetComponent<Collider>().enabled = false;
 
         TextMesh title = CreateLabel(skyline.transform, "MICHAEL  •  CONVERGENCE ATELIER\nALCHEMY  •  RESEARCH  •  SYNTHESIS",
-            new Vector3(0f, 8.25f, 6.6f), 0.075f, 64, TextAnchor.MiddleCenter);
+            new Vector3(0f, 8.25f, 6.6f), 0.058f, 64, TextAnchor.MiddleCenter);
         title.color = new Color(0.78f, 0.93f, 1f);
     }
 
@@ -318,9 +362,16 @@ public static class MichaelIslandSceneBuilder
         Camera camera = Camera.main;
         if (camera != null)
         {
-            Quaternion rotation = Quaternion.Euler(38f, 0f, 0f);
-            camera.transform.SetPositionAndRotation(new Vector3(0f, 14.5f, -19.5f), rotation);
-            camera.transform.LookAt(new Vector3(0f, 1.1f, 1.4f));
+            OrbitCameraController orbit = camera.GetComponent<OrbitCameraController>();
+            if (orbit != null)
+            {
+                orbit.ConfigureFrame(new Vector3(0f, 0f, 1.4f), 24f, 0f, 38f);
+            }
+            else
+            {
+                camera.transform.SetPositionAndRotation(new Vector3(0f, 14.5f, -19.5f), Quaternion.identity);
+                camera.transform.LookAt(new Vector3(0f, 1.1f, 1.4f));
+            }
         }
 
         GameObject fill = GameObject.Find("Arcane Fill Light");

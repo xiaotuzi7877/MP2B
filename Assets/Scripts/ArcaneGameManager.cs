@@ -494,6 +494,13 @@ namespace ArcaneWorkshop
                 return;
             }
 
+            FutureIslandGate futureGate = hit.collider.GetComponentInParent<FutureIslandGate>();
+            if (futureGate != null)
+            {
+                futureGate.Interact(this);
+                return;
+            }
+
             TeamExpansionStation teamStation = hit.collider.GetComponentInParent<TeamExpansionStation>();
             if (teamStation != null)
             {

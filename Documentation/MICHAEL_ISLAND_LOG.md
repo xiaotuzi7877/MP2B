@@ -56,3 +56,22 @@ Reference: three-island concept image supplied on 2026-10-26.
   - all world-facing title text is upright and legible in the desktop preview;
   - the two teammate gate anchors remain data-only in this milestone so their visual blockers and interactions can be independently tested in MI-03.
 
+### MI-03 — Reserved teammate link gates
+
+- Status: complete
+- Date: 2026-10-26
+- Commit subject: `Add safe reserved teammate link gates`
+- Work recorded:
+  - construct clearly differentiated Lucas and Justin link gates at the two front corners;
+  - keep both links visibly sealed until teammate scenes are integrated;
+  - add solid safety blockers so desktop and VR players cannot walk through an unfinished link into the void;
+  - make both gates respond through the shared desktop/VR pointer pipeline;
+  - show an explicit reserved-link message instead of pretending an unavailable island is connected.
+- Verification:
+  - Unity rebuilt the scene with two `FutureIslandGate` components, two solid safety colliders, and separate green/magenta visual identities;
+  - Play Mode primary-click on the Justin gate displayed `Justin Island link reserved for Justin. The safety seal remains active until that island is merged.`;
+  - Play Mode primary-click on the Lucas gate displayed the equivalent Lucas reservation and safety-seal message;
+  - the initial orbit camera now frames both reserved gates instead of clipping them off-screen;
+  - fixed `WorldLabelBillboard.ScaleWithDistance` persistence so authored signs keep their intended size after scene reload and Play Mode;
+  - Unity Console remained at zero warnings and zero errors after compilation and scene rebuild.
+

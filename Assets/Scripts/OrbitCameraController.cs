@@ -4,10 +4,19 @@ namespace ArcaneWorkshop
 {
     public sealed class OrbitCameraController : MonoBehaviour
     {
-        [SerializeField] private Vector3 target = Vector3.zero;
-        [SerializeField] private float distance = 13f;
-        [SerializeField] private float yaw = 38f;
-        [SerializeField] private float pitch = 42f;
+        [SerializeField] private Vector3 target = new Vector3(0f, 0f, 1.4f);
+        [SerializeField] private float distance = 24f;
+        [SerializeField] private float yaw;
+        [SerializeField] private float pitch = 38f;
+
+        public void ConfigureFrame(Vector3 lookTarget, float orbitDistance, float orbitYaw, float orbitPitch)
+        {
+            target = lookTarget;
+            distance = orbitDistance;
+            yaw = orbitYaw;
+            pitch = orbitPitch;
+            ApplyTransform();
+        }
 
         private void Start()
         {
@@ -29,7 +38,7 @@ namespace ArcaneWorkshop
             {
                 distance -= Mathf.Sign(scroll) * 0.7f;
             }
-            distance = Mathf.Clamp(distance, 7f, 21f);
+            distance = Mathf.Clamp(distance, 8f, 28f);
             ApplyTransform();
         }
 
