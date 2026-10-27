@@ -123,6 +123,38 @@ namespace ArcaneWorkshop
             return transform.TransformPoint(clampedLocal);
         }
 
+        public bool TryGetRandomWalkablePoint(out Vector3 worldPoint, float height = -0.06f, float edgeMargin = 0.8f)
+        {
+            worldPoint = transform.position;
+            if (localWalkablePolygon == null || localWalkablePolygon.Length < 3)
+            {
+                return false;
+            }
+
+            Vector2 minimum = localWalkablePolygon[0];
+            Vector2 maximum = localWalkablePolygon[0];
+            for (int i = 1; i < localWalkablePolygon.Length; i++)
+            {
+                minimum = Vector2.Min(minimum, localWalkablePolygon[i]);
+                maximum = Vector2.Max(maximum, localWalkablePolygon[i]);
+            }
+
+            for (int attempt = 0; attempt < 48; attempt++)
+            {
+                Vector3 local = new Vector3(
+                    Random.Range(minimum.x, maximum.x),
+                    height,
+                    Random.Range(minimum.y, maximum.y));
+                Vector3 candidate = transform.TransformPoint(local);
+                if (ContainsWalkablePoint(candidate, edgeMargin))
+                {
+                    worldPoint = candidate;
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private static Vector2 ClosestPointOnSegment(Vector2 point, Vector2 a, Vector2 b)
         {
             Vector2 segment = b - a;

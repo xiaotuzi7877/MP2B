@@ -319,6 +319,12 @@ namespace ArcaneWorkshop
         {
             gridRoot = new GameObject("Arcane Placement Grid").transform;
             linkRoot = new GameObject("Mana Links").transform;
+            MichaelIslandLayout islandLayout = MichaelIslandLayout.Instance;
+            Vector3 gridCenter = islandLayout != null && islandLayout.BuildGridAnchor != null
+                ? islandLayout.BuildGridAnchor.position
+                : Vector3.zero;
+            gridRoot.position = gridCenter;
+            linkRoot.position = gridCenter;
             cells = new GridCell[gridSize, gridSize];
             placementMarkers = new Renderer[gridSize, gridSize];
             float centerOffset = (gridSize - 1) * cellSize * 0.5f;
@@ -328,8 +334,8 @@ namespace ArcaneWorkshop
                 for (int column = 0; column < gridSize; column++)
                 {
                     GameObject cellObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    cellObject.transform.SetParent(gridRoot);
-                    cellObject.transform.position = new Vector3(column * cellSize - centerOffset, -0.1f, row * cellSize - centerOffset);
+                    cellObject.transform.SetParent(gridRoot, false);
+                    cellObject.transform.localPosition = new Vector3(column * cellSize - centerOffset, -0.1f, row * cellSize - centerOffset);
                     cellObject.transform.localScale = new Vector3(cellSize - 0.06f, 0.12f, cellSize - 0.06f);
                     cellObject.GetComponent<Renderer>().sharedMaterial = (row + column) % 2 == 0 ? gridMaterialA : gridMaterialB;
                     GridCell cell = cellObject.AddComponent<GridCell>();
@@ -342,7 +348,7 @@ namespace ArcaneWorkshop
                     marker.transform.SetParent(gridRoot, false);
                     marker.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
                     marker.transform.localScale = Vector3.one * (cellSize - 0.1f);
-                    marker.transform.position = cellObject.transform.position;
+                    marker.transform.localPosition = cellObject.transform.localPosition;
                     Renderer markerRenderer = marker.GetComponent<Renderer>();
                     markerRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                     markerRenderer.enabled = false;
@@ -1289,11 +1295,31 @@ namespace ArcaneWorkshop
 
         private bool FindSpawnPoint(out Vector3 position)
         {
-            for (int attempt = 0; attempt < 40; attempt++)
+            MichaelIslandLayout islandLayout = MichaelIslandLayout.Instance;
+            for (int attempt = 0; attempt < 80; attempt++)
             {
-                float angle = Random.Range(0f, Mathf.PI * 2f);
-                float radius = Random.Range(6.6f, 8.6f);
-                position = new Vector3(Mathf.Cos(angle) * radius, -0.06f, Mathf.Sin(angle) * radius);
+                if (islandLayout != null)
+                {
+                    if (!islandLayout.TryGetRandomWalkablePoint(out position, -0.06f, 0.9f))
+                    {
+                        continue;
+                    }
+                    Vector3 gridCenter = islandLayout.BuildGridAnchor != null
+                        ? islandLayout.BuildGridAnchor.position
+                        : islandLayout.transform.position;
+                    Vector3 fromCourt = position - gridCenter;
+                    fromCourt.y = 0f;
+                    if (fromCourt.sqrMagnitude < 27.5f)
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    float angle = Random.Range(0f, Mathf.PI * 2f);
+                    float radius = Random.Range(6.6f, 8.6f);
+                    position = new Vector3(Mathf.Cos(angle) * radius, -0.06f, Mathf.Sin(angle) * radius);
+                }
                 if (IsSpawnPointFree(position))
                 {
                     return true;

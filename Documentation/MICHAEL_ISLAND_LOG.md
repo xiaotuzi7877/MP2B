@@ -75,3 +75,21 @@ Reference: three-island concept image supplied on 2026-10-26.
   - fixed `WorldLabelBillboard.ScaleWithDistance` persistence so authored signs keep their intended size after scene reload and Play Mode;
   - Unity Console remained at zero warnings and zero errors after compilation and scene rebuild.
 
+### MI-04 — Layout-aware construction grid and material spawning
+
+- Status: complete
+- Date: 2026-10-26
+- Commit subject: `Bind gameplay placement to Michael island layout`
+- Work recorded:
+  - position the runtime construction grid from the authored `Build Grid Anchor` rather than the legacy world origin;
+  - keep placement markers and mana links in the same anchored coordinate system;
+  - replace circular-island wild material spawning with sampling inside the triangular walkable polygon;
+  - reserve clear space around the central construction court and reject blocked spawn points;
+  - verify the full 7×7 grid and every spawned gatherable remain on the Michael island surface in Play Mode.
+- Verification:
+  - Play Mode displayed all 49 construction cells centered on the blue rune court with no cell extending beyond the triangle;
+  - observed Moon Herb and Crystal Cluster spawns remained inside the authored polygon, outside the protected court radius, and clear of existing blockers;
+  - desktop selection and placement on an anchored grid cell successfully built a Rune Foundation;
+  - the first restoration goal advanced to `2/8`, Moon Planters unlocked, and the reward calculation changed Gold from 35 to 38, confirming the relocated grid still drives progression;
+  - compilation completed without C# errors.
+
