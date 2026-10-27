@@ -7,6 +7,13 @@ public class FarmProgression : MonoBehaviour
     [SerializeField] private GameObject moonSeeds;
     [SerializeField] private GameObject bloomSeeds;
     [SerializeField] private GameObject sprinklerCarrier;
+    [SerializeField] private GameObject miningTool;
+    [SerializeField] private GameObject miningField;
+    [SerializeField] private GameObject pickaxeCarrier;
+    [SerializeField] private GameObject tankCarrier;
+    [SerializeField] private KitPurchase sprinklerPurchase;
+    [SerializeField] private KitPurchase tankPurchase;
+    [SerializeField] private KitPurchase pickaxePurchase;
     [SerializeField] private TextMesh goalText;
     [SerializeField] private TextMesh lessonText;
     [SerializeField] private TextMesh sprinklerLabel;
@@ -20,12 +27,30 @@ public class FarmProgression : MonoBehaviour
     private bool shoppingHelp;
     private int shoppingStones, shoppingCoins;
     private FarmResource shoppingKit;
+    private bool plantedAndWatered, harvestedHerb, harvestedBloom, irrigatedNeighbor, tankUpgraded;
+    private Sprinkler lessonSprinkler;
 
     public int Stage { get; private set; }
     public bool Revealing => pendingStage > Stage;
-    public bool SprinklerUnlocked => Stage >= 3;
+    public bool MiningUnlocked => Stage >= 2;
+    public bool SprinklerUnlocked => Stage >= 4;
+    public bool TankUnlocked => Stage >= 5;
     public string CurrentGoal { get; private set; }
-    public bool CanPlant(FarmCropKind kind) => Stage >= (kind == FarmCropKind.MoonHerb ? 1 : 2);
+    public bool CanPlant(FarmCropKind kind) => Stage >= (kind == FarmCropKind.MoonHerb ? 1 : 3);
+    public bool CanBuyKit(FarmResource kit) => kit switch
+    {
+        FarmResource.PickaxeKit => MiningUnlocked,
+        FarmResource.SprinklerKit => SprinklerUnlocked,
+        FarmResource.TankKit => TankUnlocked,
+        _ => true
+    };
+    public string KitRequirement(FarmResource kit) => kit switch
+    {
+        FarmResource.PickaxeKit => "Plant and water a Moon Herb to unlock mining.",
+        FarmResource.SprinklerKit => "Harvest Bloom to unlock the sprinkler.",
+        FarmResource.TankKit => "Use a sprinkler to water a nearby tilled plot to unlock tank upgrades.",
+        _ => "Complete the current farm lesson."
+    };
 
     private void Awake()
     {
@@ -40,6 +65,7 @@ public class FarmProgression : MonoBehaviour
             Stage = pendingStage;
             ApplyVisibility();
             ClearGuide();
+            Advance();
         }
         if (Time.unscaledTime < nextRefresh) return;
         nextRefresh = Time.unscaledTime + .25f;
@@ -55,16 +81,49 @@ public class FarmProgression : MonoBehaviour
 
     public void OnPlanted(FarmCell cell, FarmCropKind kind)
     {
-        if ((Stage == 1 && kind == FarmCropKind.MoonHerb) || (Stage == 2 && kind == FarmCropKind.ConservatoryBloom)) lessonCrop = cell;
+        if ((Stage <= 2 && kind == FarmCropKind.MoonHerb) || (Stage == 3 && kind == FarmCropKind.ConservatoryBloom)) lessonCrop = cell;
         ClearGuide();
     }
 
     public void OnHarvested(FarmCropKind kind)
     {
-        if (Stage == 1 && kind == FarmCropKind.MoonHerb)
-            Reveal(2, "BLOOM UNLOCKED", "Grow Bloom with the same tools. Its first harvest gives 2 crafting ingredients.");
-        else if (Stage == 2 && kind == FarmCropKind.ConservatoryBloom)
-            Reveal(3, "SPRINKLER UNLOCKED", "Buy a kit, place it on empty tilled soil, then fill it with water to irrigate nearby plots.");
+        if (kind == FarmCropKind.MoonHerb) harvestedHerb = true;
+        else harvestedBloom = true;
+        Advance();
+    }
+
+    public void OnWatered(FarmCell cell, FarmCropKind kind)
+    {
+        if (plantedAndWatered || kind != FarmCropKind.MoonHerb || !cell.IsPlanted) return;
+        plantedAndWatered = true;
+        lessonCrop = cell;
+        Advance();
+    }
+
+    public void OnSprinklerBuilt(Sprinkler sprinkler) { lessonSprinkler = sprinkler; }
+
+    public void OnIrrigated(Sprinkler sprinkler)
+    {
+        lessonSprinkler = sprinkler;
+        if (irrigatedNeighbor) return;
+        irrigatedNeighbor = true;
+        Advance();
+    }
+
+    public void OnTankUpgraded() { tankUpgraded = true; ClearGuide(); }
+
+    // Remember successful actions during introductions; never skip a reveal or lose a milestone.
+    private void Advance()
+    {
+        if (Revealing) return;
+        if (Stage == 1 && plantedAndWatered)
+            Reveal(2, "MINING UNLOCKED", "Swing the pickaxe into rocks and collect stone drops. Mine while your Moon Herb grows.");
+        else if (Stage == 2 && harvestedHerb)
+            Reveal(3, "BLOOM UNLOCKED", "Grow Bloom with the same tools. Its first harvest gives 2 shared crafting ingredients.");
+        else if (Stage == 3 && harvestedBloom)
+            Reveal(4, "SPRINKLER UNLOCKED", "Buy a kit, place it on empty tilled soil, then fill it to water nearby plots automatically.");
+        else if (Stage == 4 && irrigatedNeighbor)
+            Reveal(5, "TANK UPGRADE UNLOCKED", "Buy a tank kit and touch your sprinkler with its carrier. Capacity increases from 100 to 200.");
     }
 
     private void Reveal(int next, string title, string text)
@@ -80,9 +139,15 @@ public class FarmProgression : MonoBehaviour
     private void ApplyVisibility()
     {
         moonSeeds.SetActive(Stage >= 1);
-        bloomSeeds.SetActive(Stage >= 2);
+        bloomSeeds.SetActive(Stage >= 3);
         sprinklerCarrier.SetActive(SprinklerUnlocked);
+        if (miningTool) miningTool.SetActive(MiningUnlocked);
+        if (miningField) miningField.SetActive(MiningUnlocked);
+        if (pickaxeCarrier) pickaxeCarrier.SetActive(MiningUnlocked);
+        if (tankCarrier) tankCarrier.SetActive(TankUnlocked);
         sprinklerLabel.text = SprinklerUnlocked ? sprinklerPrice : "LOCKED\nHarvest Bloom\nGRIP for help";
+        if (pickaxePurchase) pickaxePurchase.RefreshAvailabilityLabel();
+        if (tankPurchase) tankPurchase.RefreshAvailabilityLabel();
     }
 
     public void Teach(string nextStep, Func<bool> completed)
@@ -96,7 +161,7 @@ public class FarmProgression : MonoBehaviour
     public void TeachPurchase(FarmResource kit, int stones, int coins)
     {
         ClearGuide();
-        if (kit == FarmResource.SprinklerKit && !SprinklerUnlocked) return;
+        if (!CanBuyKit(kit)) return;
         shoppingHelp = true;
         shoppingKit = kit;
         shoppingStones = stones;
@@ -118,7 +183,7 @@ public class FarmProgression : MonoBehaviour
         if (Revealing)
         {
             CurrentGoal = "A new farming tool is opening...";
-            goalText.text = "DISCOVERY " + pendingStage + " / 3";
+            goalText.text = "DISCOVERY " + pendingStage + " / 5";
             lessonText.text = Wrap(introduction, 43);
             return;
         }
@@ -133,24 +198,53 @@ public class FarmProgression : MonoBehaviour
         }
         else if (!string.IsNullOrEmpty(recovery)) CurrentGoal = recovery;
         else if (Stage == 0) CurrentGoal = "Grab the harrow and touch an untilled plot to prepare the soil.";
-        else if (Stage >= 3)
+        else if (Stage == 4)
         {
-            CurrentGoal = "Take your Bloom to Justin's foundry and use it at the forge.";
-            controls = "2 Blooms added to your spellbook.\nOptional: buy a sprinkler kit, place on empty tilled soil and fill with water.";
+            if (!lessonSprinkler)
+                CurrentGoal = resources.GetAmount(FarmResource.SprinklerKit) > 0
+                    ? "Take the sprinkler carrier and touch an empty tilled plot."
+                    : PurchaseGoal(sprinklerPurchase, "sprinkler");
+            else if (lessonSprinkler.Water <= 0f)
+                CurrentGoal = "Fill your sprinkler with the watering can. Prepare a nearby plot for it to water.";
+            else CurrentGoal = "Till a nearby plot without a sprinkler. Let automatic watering increase its moisture to unlock the tank upgrade.";
+            controls = "2 Blooms are in your spellbook.\nGoal: irrigate a nearby plot.";
+        }
+        else if (Stage >= 5)
+        {
+            CurrentGoal = tankUpgraded
+                ? "Farm lessons complete! Use Moon Herbs and Bloom in the main workshop. Y opens shared resources."
+                : resources.GetAmount(FarmResource.TankKit) > 0
+                    ? "Grab the tank upgrade carrier and touch your sprinkler to increase capacity to 200."
+                    : PurchaseGoal(tankPurchase, "tank upgrade");
+            controls = "GRIP: grab the upgrade carrier\nTouch the sprinkler to upgrade\nY: shared resources";
         }
         else
         {
-            string crop = Stage == 1 ? "Moon Herb" : "Bloom";
+            string crop = Stage <= 2 ? "Moon Herb" : "Bloom";
             if (lessonCrop == null || !lessonCrop.IsPlanted)
                 CurrentGoal = "Grab the " + crop + " seed bag and touch an empty tilled plot. Till a new plot if needed.";
+            else if (Stage == 1)
+                CurrentGoal = "Water your planted Moon Herb: hold TRIGGER with the can spout over its plot. This unlocks mining.";
             else if (lessonCrop.Crop.IsMature)
                 CurrentGoal = crop + " is mature! Point at the plant and press GRIP to harvest.";
             else if (lessonCrop.Moisture <= 0)
                 CurrentGoal = "Grab the watering can. Hold TRIGGER with the spout above your " + crop + " plot.";
             else CurrentGoal = "Keep the soil moist and wait for " + crop + " to mature. Growth: " + Mathf.FloorToInt(lessonCrop.Crop.Growth) + "%";
+            if (Stage == 2) controls = "While it grows: GRIP the pickaxe,\nswing into rocks and collect stones.\nHarvest Moon Herb to unlock Bloom.";
         }
         goalText.text = "NEXT STEP\n" + Wrap(CurrentGoal, 43);
         lessonText.text = Wrap(controls, 43);
+    }
+
+    private string PurchaseGoal(KitPurchase purchase, string label)
+    {
+        if (!purchase) return "Buy a " + label + " kit at the farm shop.";
+        int stones = Mathf.Max(0, purchase.StoneCost - resources.GetAmount(FarmResource.Stones));
+        int coins = Mathf.Max(0, purchase.CoinCost - resources.GetAmount(FarmResource.Coins));
+        return stones > 0 || coins > 0
+            ? "For the " + label + ": " + (stones > 0 ? "mine " + stones + " more stones. " : "")
+                + (coins > 0 ? "Trade Moon Herbs for " + coins + " more coins." : "")
+            : "Materials ready. GRIP the " + label + " purchase button at the farm shop.";
     }
 
     public static string Wrap(string text, int width)

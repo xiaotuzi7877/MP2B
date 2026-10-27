@@ -25,6 +25,7 @@ public class RockField : MonoBehaviour
     }
     private void Spawn()
     {
+        if (resources.Progression != null && !resources.Progression.MiningUnlocked) return;
         var empty = new List<Transform>();
         foreach (var point in spawnPoints)
             if (point.childCount == 0) empty.Add(point);

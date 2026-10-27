@@ -13,6 +13,7 @@ public class Boulder : MonoBehaviour
 
     public bool Hit(float damage)
     {
+        if (resources != null && resources.Progression != null && !resources.Progression.MiningUnlocked) return false;
         if (hardness <= 0f) return false;
         hardness = Mathf.Max(0f, hardness - damage);
         hardnessText.text = $"Hardness: {hardness:0.#} / 3";

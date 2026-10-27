@@ -130,9 +130,14 @@ public class FarmResources : MonoBehaviour
     public bool TryBuyKit(int stoneCost, int coinCost, FarmResource kit, out string failure)
     {
         failure = null;
-        if (kit == FarmResource.SprinklerKit && progression != null && !progression.SprinklerUnlocked)
+        if (progression != null && !progression.CanBuyKit(kit))
         {
-            failure = "Invalid purchase: sprinkler locked.\nHarvest Bloom first. No resources spent.";
+            failure = "Invalid purchase: locked.\n" + progression.KitRequirement(kit) + "\nNo resources spent.";
+            return false;
+        }
+        if (stoneCost < 0 || coinCost < 0)
+        {
+            failure = "Invalid purchase cost. No resources spent.";
             return false;
         }
         if (stones < stoneCost || coins < coinCost)

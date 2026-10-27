@@ -27,6 +27,17 @@ public static class KeliangFarmProgressionSetup
         var buy = island.GetComponentsInChildren<KitPurchase>(true)
             .Single(b => new SerializedObject(b).FindProperty("kit").enumValueIndex == (int)FarmResource.SprinklerKit);
         var label = buy.GetComponentInChildren<TextMesh>(true);
+        var pickaxe = island.GetComponentInChildren<PickaxeTool>(true).GetComponentInParent<XRGrabInteractable>(true).gameObject;
+        var field = island.GetComponentInChildren<RockField>(true).gameObject;
+        GameObject Carrier(FarmResource kit) => island.GetComponentsInChildren<UpgradeKitTool>(true)
+            .Single(t => new SerializedObject(t).FindProperty("kit").enumValueIndex == (int)kit)
+            .GetComponentInParent<XRGrabInteractable>(true).gameObject;
+        KitPurchase Purchase(FarmResource kit) => island.GetComponentsInChildren<KitPurchase>(true)
+            .Single(t => new SerializedObject(t).FindProperty("kit").enumValueIndex == (int)kit);
+        var pickaxeCarrier = Carrier(FarmResource.PickaxeKit);
+        var tankCarrier = Carrier(FarmResource.TankKit);
+        var pickaxeBuy = Purchase(FarmResource.PickaxeKit);
+        var tankBuy = Purchase(FarmResource.TankKit);
         var board = island.transform.Find("farmLessonBoard");
         if (!board)
         {
@@ -56,14 +67,29 @@ public static class KeliangFarmProgressionSetup
         Set(progression, "moonSeeds", moon);
         Set(progression, "bloomSeeds", bloom);
         Set(progression, "sprinklerCarrier", carrier);
+        Set(progression, "miningTool", pickaxe);
+        Set(progression, "miningField", field);
+        Set(progression, "pickaxeCarrier", pickaxeCarrier);
+        Set(progression, "tankCarrier", tankCarrier);
+        Set(progression, "sprinklerPurchase", buy);
+        Set(progression, "pickaxePurchase", pickaxeBuy);
+        Set(progression, "tankPurchase", tankBuy);
         Set(progression, "goalText", board.Find("Goal").GetComponent<TextMesh>());
         Set(progression, "lessonText", board.Find("Lesson").GetComponent<TextMesh>());
         Set(progression, "sprinklerLabel", label);
         var so = new SerializedObject(progression);
         so.FindProperty("sprinklerPrice").stringValue = "SPRINKLER KIT\n5 stone / 3 coins";
         so.ApplyModifiedPropertiesWithoutUndo();
-        moon.SetActive(false); bloom.SetActive(false); carrier.SetActive(false);
-        foreach (var tool in new[] { moon, bloom, carrier }) PrefabUtility.RecordPrefabInstancePropertyModifications(tool);
+        foreach (var tool in new[] { moon, bloom, carrier, pickaxe, field, pickaxeCarrier, tankCarrier })
+        {
+            tool.SetActive(false);
+            EditorUtility.SetDirty(tool);
+            if (PrefabUtility.IsPartOfPrefabInstance(tool)) PrefabUtility.RecordPrefabInstancePropertyModifications(tool);
+        }
+        pickaxeBuy.RefreshAvailabilityLabel();
+        tankBuy.RefreshAvailabilityLabel();
+        EditorUtility.SetDirty(pickaxeBuy.GetComponentInChildren<TextMesh>(true));
+        EditorUtility.SetDirty(tankBuy.GetComponentInChildren<TextMesh>(true));
         label.text = "LOCKED\nHarvest Bloom\nGRIP for help";
         EditorUtility.SetDirty(label);
         EnableGrowingCropInteraction(KeliangMagicCropSetup.HerbPath);

@@ -96,7 +96,12 @@ public class FarmCell : MonoBehaviour
         if (HasSprinkler)
             sprinkler.AddWater(amount);
         else if (IsTilled)
+        {
+            float before = soil.Moisture;
             soil.AddWater(amount);
+            if (IsPlanted && soil.Moisture > before)
+                resources.Progression?.OnWatered(this, plantedKind);
+        }
     }
 
     public bool BuildSprinkler()
@@ -118,6 +123,7 @@ public class FarmCell : MonoBehaviour
         placed.name = "sprinkler";
         sprinkler = placed.GetComponent<Sprinkler>();
         sprinkler.Initialize(resources, neighbors);
+        resources.Progression?.OnSprinklerBuilt(sprinkler);
         resources.Progression?.Teach("Fill the sprinkler with your watering can to irrigate nearby tilled plots.", () => sprinkler == null || sprinkler.Water > 0f);
         feedback.Success("Sprinkler built - fill with water");
         return true;
