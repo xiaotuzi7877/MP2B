@@ -100,8 +100,58 @@ public static class MichaelIslandSceneBuilder
         layout.Configure(grid, spawn, lucas, justin, nexus, WalkablePolygon);
         CreateFutureGate(lucas, "Lucas Island", "Lucas", lucasGreen, stone, gold);
         CreateFutureGate(justin, "Justin Island", "Justin", justinMagenta, stone, gold);
+        CreateDeliveryReceiver(root.transform, "Justin", WorkshopResourceKind.ConservatoryBloom,
+            new Vector3(-6.6f, 0f, 2.6f), lucasGreen, stone, gold);
+        CreateDeliveryReceiver(root.transform, "Lucas", WorkshopResourceKind.AstralCore,
+            new Vector3(6.35f, 0f, 0.85f), justinMagenta, stone, gold);
 
         RepositionExistingSceneObjects();
+    }
+
+    private static void CreateDeliveryReceiver(
+        Transform parent,
+        string source,
+        WorkshopResourceKind resource,
+        Vector3 position,
+        Material accent,
+        Material stone,
+        Material gold)
+    {
+        GameObject receiverObject = new GameObject(source + " " + resource + " Delivery Receiver");
+        receiverObject.transform.SetParent(parent, false);
+        receiverObject.transform.localPosition = position;
+        receiverObject.transform.localRotation = Quaternion.LookRotation(-position.normalized, Vector3.up);
+        TeammateDeliveryReceiver receiver = receiverObject.AddComponent<TeammateDeliveryReceiver>();
+
+        BoxCollider interactionCollider = receiverObject.AddComponent<BoxCollider>();
+        interactionCollider.center = new Vector3(0f, 0.85f, 0f);
+        interactionCollider.size = new Vector3(2.35f, 1.7f, 1.8f);
+
+        CreateImported(source + " Receiver Plinth", FantasyTownFolder + "/fountain-curved.fbx", receiverObject.transform,
+            Vector3.zero, Vector3.zero, Vector3.one * 0.82f, stone);
+        CreatePrimitive(source + " Receiver Accent", PrimitiveType.Cylinder, receiverObject.transform,
+            new Vector3(0f, 0.28f, 0f), new Vector3(1.3f, 0.07f, 1.3f), accent).GetComponent<Collider>().enabled = false;
+
+        GameObject payloadAnchorObject = new GameObject("Delivered Model Anchor");
+        payloadAnchorObject.transform.SetParent(receiverObject.transform, false);
+        payloadAnchorObject.transform.localPosition = new Vector3(0f, 0.82f, 0f);
+        Transform payloadAnchor = payloadAnchorObject.transform;
+
+        Mesh ringMesh = AssetDatabase.LoadAssetAtPath<Mesh>("Assets/Meshes/RuneRing.asset");
+        if (ringMesh != null)
+        {
+            CreateMeshObject(source + " Receiver Rune", ringMesh, payloadAnchor, Vector3.zero,
+                new Vector3(90f, 0f, 0f), Vector3.one * 0.72f, gold);
+        }
+        CreatePrimitive(source + " Receiver Beacon", PrimitiveType.Sphere, payloadAnchor,
+            new Vector3(0f, 0.42f, 0f), Vector3.one * 0.27f, accent).GetComponent<Collider>().enabled = false;
+
+        TextMesh label = CreateLabel(receiverObject.transform, string.Empty,
+            new Vector3(0f, 2.15f, 0f), 0.028f, 52, TextAnchor.MiddleCenter);
+        label.color = accent.color;
+        receiver.Configure(resource, source, payloadAnchor, label);
+        CreatePointLight(source + " Receiver Light", receiverObject.transform,
+            new Vector3(0f, 1.15f, -0.25f), accent.color, 0.9f, 3.5f);
     }
 
     private static void CreateFutureGate(Transform anchor, string destination, string owner, Material accent, Material stone, Material gold)

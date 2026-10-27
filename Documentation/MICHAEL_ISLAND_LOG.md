@@ -111,3 +111,22 @@ Reference: three-island concept image supplied on 2026-10-26.
   - warm research lights and existing blue mana lights provide separate visual zones without changing gameplay colliders;
   - Unity completed the rebuild with zero Console warnings and zero Console errors.
 
+### MI-06 — Teammate delivery receivers
+
+- Status: complete
+- Date: 2026-10-26
+- Commit subject: `Add teammate resource delivery receivers`
+- Work recorded:
+  - add a Justin receiver dedicated to Conservatory Blooms and a Lucas receiver dedicated to Astral Cores;
+  - expose a stable `Receive` API that updates Michael's shared inventory without importing either teammate's full island;
+  - provide a child anchor for attaching delivered teammate models later;
+  - reject deliveries from the wrong named source and invalid quantities;
+  - expose live inventory status through world labels and the shared desktop/VR pointer pipeline.
+- Verification:
+  - scene rebuild produced two visually distinct receiver pedestals with named `Delivered Model Anchor` children;
+  - Play Mode click on the Justin receiver reported `accepts Conservatory Bloom` and shared inventory `0`;
+  - Play Mode click on the Lucas receiver reported `accepts Astral Core` and shared inventory `0`;
+  - both interactions travelled through `ArcaneGameManager.ProcessPointer`, the same path used by desktop and VR controllers;
+  - the public receiver API validates positive quantities, checks the expected named source, attaches an optional delivered model, and forwards accepted resources to `RegisterTeammateOutput`;
+  - Unity Console remained free of warnings and errors.
+

@@ -507,6 +507,13 @@ namespace ArcaneWorkshop
                 return;
             }
 
+            TeammateDeliveryReceiver receiver = hit.collider.GetComponentInParent<TeammateDeliveryReceiver>();
+            if (receiver != null)
+            {
+                receiver.Interact(this);
+                return;
+            }
+
             TeamExpansionStation teamStation = hit.collider.GetComponentInParent<TeamExpansionStation>();
             if (teamStation != null)
             {
