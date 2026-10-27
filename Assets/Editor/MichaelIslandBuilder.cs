@@ -1118,7 +1118,7 @@ public static class MichaelIslandBuilder
         label.alignment = TextAlignment.Center;
         label.fontSize = fontSize;
         label.characterSize = characterSize;
-        WorldText.Style(label);
+        ArcaneWorkshop.WorldText.Style(label);
         if (billboard)
         {
             labelObject.AddComponent<WorldLabelBillboard>().ScaleWithDistance = false;

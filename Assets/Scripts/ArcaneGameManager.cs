@@ -124,6 +124,20 @@ namespace ArcaneWorkshop
 
         // Set by the VR rig: when true, the desktop mouse no longer drives the pointer.
         public bool ExternalPointerActive { get; set; }
+        private bool sceneRigActive;
+        private Transform sceneRigHead;
+
+        public void UseSceneRig(Transform head = null)
+        {
+            sceneRigActive = true;
+            sceneRigHead = head;
+        }
+
+        public SpellbookPanel CreateSceneRigSpellbook(Transform mount)
+        {
+            spellbook = SpellbookPanel.Create(this, mount, uiPageMaterial, uiButtonMaterial);
+            return spellbook;
+        }
         private TutorialBubble tutorialBubble;
         private SpellbookPanel spellbook;
         private VRRig vrRig;
@@ -459,11 +473,16 @@ namespace ArcaneWorkshop
 
         // One pointer pipeline for both the desktop mouse ray and the VR controller ray.
         // primary = left click / trigger (gather, build, press), secondary = right click / grip (use).
+        public void ClearPointerHover() => hoveredCell = null;
+
+        public bool TryGetPointerHit(Ray ray, out RaycastHit hit) =>
+            Physics.Raycast(ray, out hit, 200f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide);
+
         public void ProcessPointer(Ray ray, bool primary, bool secondary, bool modifier)
         {
             hoveredCell = null;
             RaycastHit hit;
-            if (!Physics.Raycast(ray, out hit, 200f, ~0, QueryTriggerInteraction.Collide))
+            if (!TryGetPointerHit(ray, out hit))
             {
                 return;
             }
@@ -755,6 +774,7 @@ namespace ArcaneWorkshop
 
         private void TryStartVRWhenReady()
         {
+            if (sceneRigActive) return;
             if (ExternalPointerActive || Camera.main == null || Time.unscaledTime < nextVrStartupCheck)
             {
                 return;
@@ -1348,9 +1368,10 @@ namespace ArcaneWorkshop
                 return false;
             }
             // The VR station ring (radius 7.5) lies inside the wild spawn ring, so keep the player's feet clear.
-            if (vrRig != null && vrRig.Head != null)
+            Transform playerHead = sceneRigHead != null ? sceneRigHead : vrRig != null ? vrRig.Head : null;
+            if (playerHead != null)
             {
-                Vector3 toPlayer = vrRig.Head.position - position;
+                Vector3 toPlayer = playerHead.position - position;
                 toPlayer.y = 0f;
                 if (toPlayer.magnitude < 1.8f)
                 {
