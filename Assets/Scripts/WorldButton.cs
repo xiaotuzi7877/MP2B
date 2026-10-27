@@ -21,6 +21,7 @@ namespace ArcaneWorkshop
         {
             GameObject tablet = GameObject.CreatePrimitive(PrimitiveType.Cube);
             tablet.name = "Button " + text.Split('\n')[0];
+            tablet.GetComponent<Collider>().isTrigger = true;
             tablet.transform.SetParent(parent, false);
             tablet.transform.localPosition = localPosition;
             tablet.transform.localScale = new Vector3(size.x, size.y, 0.04f);
