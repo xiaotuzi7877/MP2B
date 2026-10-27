@@ -93,3 +93,21 @@ Reference: three-island concept image supplied on 2026-10-26.
   - the first restoration goal advanced to `2/8`, Moon Planters unlocked, and the reward calculation changed Gold from 35 to 38, confirming the relocated grid still drives progression;
   - compilation completed without C# errors.
 
+### MI-05 — Authored atelier workshop dressing
+
+- Status: complete
+- Date: 2026-10-26
+- Commit subject: `Dress Michael island as an alchemy workshop`
+- Work recorded:
+  - turn the rear silhouette into a readable workshop interior instead of a sparse decorative backdrop;
+  - reuse the licensed KayKit Dungeon set already tracked by the project for walls, furniture, storage, banners, torches, and reagent props;
+  - establish distinct research, storage, and alchemy work areas without obstructing the 7×7 construction court;
+  - add warm task lighting against the existing cool blue mana lighting;
+  - preserve clear paths to both future-island gates and the merchant portal.
+- Verification:
+  - rebuilt preview visibly shows a continuous rear workshop wall, research bench, reagent shelving, secure storage, banners, torches, and colored bottles;
+  - all detailed props are imported licensed assets; custom geometry remains limited to island-specific structural surfaces;
+  - the central court remains unobstructed and both reserved gates remain fully visible;
+  - warm research lights and existing blue mana lights provide separate visual zones without changing gameplay colliders;
+  - Unity completed the rebuild with zero Console warnings and zero Console errors.
+

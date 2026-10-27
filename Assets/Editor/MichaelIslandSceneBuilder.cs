@@ -13,6 +13,7 @@ public static class MichaelIslandSceneBuilder
     private const string MaterialFolder = "Assets/Materials";
     private const string FantasyTownFolder = "Assets/ThirdParty/KenneyFantasyTown/Models";
     private const string NatureFolder = "Assets/ThirdParty/KenneyNature/Models";
+    private const string DungeonFolder = "Assets/ThirdParty/KayKitDungeon/Models";
 
     private static readonly Vector2[] WalkablePolygon =
     {
@@ -88,6 +89,7 @@ public static class MichaelIslandSceneBuilder
         CreateEdgeRim(root.transform, stone, gold);
         CreateConstructionCourt(root.transform, stone, rune, gold, blueGlass);
         CreateRearAtelier(root.transform, stone, gold, blueGlass);
+        CreateWorkshopDressing(root.transform, stone, gold);
         CreateImportedDressing(root.transform, stone, gold);
 
         Transform grid = CreateAnchor(root.transform, "Build Grid Anchor", new Vector3(0f, 0f, 0.7f), Quaternion.identity);
@@ -349,6 +351,52 @@ public static class MichaelIslandSceneBuilder
             new Vector3(0f, 0.15f, 5.15f), Vector3.zero, Vector3.one * 1.25f, stone);
         CreateImported("Fountain Arcane Focus", FantasyTownFolder + "/fountain-center.fbx", parent,
             new Vector3(0f, 0.15f, 5.15f), Vector3.zero, Vector3.one * 1.25f, gold);
+    }
+
+    private static void CreateWorkshopDressing(Transform parent, Material stone, Material gold)
+    {
+        GameObject workshop = new GameObject("Michael Alchemy Workshop Dressing");
+        workshop.transform.SetParent(parent, false);
+
+        string[] backWalls = { "wall_window_open.fbx", "wall_arched.fbx", "wall_window_open.fbx" };
+        for (int i = 0; i < backWalls.Length; i++)
+        {
+            CreateImported("Atelier Interior Wall " + i, DungeonFolder + "/" + backWalls[i], workshop.transform,
+                new Vector3((i - 1) * 3.2f, 0.46f, 8.35f), Vector3.zero, Vector3.one * 1.42f, stone);
+        }
+
+        for (int side = -1; side <= 1; side += 2)
+        {
+            float x = side * 4.75f;
+            CreateImported("Carved Research Pillar " + side, DungeonFolder + "/pillar_decorated.fbx", workshop.transform,
+                new Vector3(x, 0.45f, 7.85f), Vector3.zero, Vector3.one * 1.35f, stone);
+            CreateImported("Blue Atelier Banner " + side, DungeonFolder + "/banner_patternA_blue.fbx", workshop.transform,
+                new Vector3(side * 2.35f, 2.75f, 7.72f), new Vector3(0f, 180f, 0f), Vector3.one * 1.18f, null);
+            CreateImported("Mounted Mana Torch " + side, DungeonFolder + "/torch_mounted.fbx", workshop.transform,
+                new Vector3(side * 1.15f, 2.15f, 7.42f), new Vector3(0f, 180f, 0f), Vector3.one, null);
+            CreatePointLight("Warm Work Light " + side, workshop.transform,
+                new Vector3(side * 1.15f, 2.45f, 6.85f), new Color(1f, 0.55f, 0.2f), 1.05f, 5f);
+        }
+
+        CreateImported("Alchemist Workbench", DungeonFolder + "/table_long_decorated_A.fbx", workshop.transform,
+            new Vector3(-5.45f, 0.42f, 4.55f), new Vector3(0f, 92f, 0f), Vector3.one * 1.08f, null);
+        CreateImported("Potion Reference Shelves", DungeonFolder + "/shelves.fbx", workshop.transform,
+            new Vector3(5.6f, 0.42f, 4.65f), new Vector3(0f, -92f, 0f), Vector3.one * 1.12f, null);
+        CreateImported("Candle Reagent Shelf", DungeonFolder + "/shelf_small_candles.fbx", workshop.transform,
+            new Vector3(3.95f, 0.52f, 7.1f), new Vector3(0f, 180f, 0f), Vector3.one, null);
+        CreateImported("Secured Reagent Chest", DungeonFolder + "/chest_gold.fbx", workshop.transform,
+            new Vector3(-5.05f, 0.42f, 6.55f), new Vector3(0f, 25f, 0f), Vector3.one, null);
+        CreateImported("Essence Storage Barrel", DungeonFolder + "/barrel_large_decorated.fbx", workshop.transform,
+            new Vector3(5.15f, 0.42f, 6.45f), new Vector3(0f, -22f, 0f), Vector3.one * 0.92f, null);
+        CreateImported("Workshop Supply Crates", DungeonFolder + "/crates_stacked.fbx", workshop.transform,
+            new Vector3(-8.1f, 0f, -0.8f), new Vector3(0f, 28f, 0f), Vector3.one * 0.9f, null);
+
+        CreateImported("Green Reagent Display", DungeonFolder + "/bottle_A_green.fbx", workshop.transform,
+            new Vector3(-5.15f, 1.4f, 4.25f), new Vector3(0f, 18f, 0f), Vector3.one * 0.62f, null);
+        CreateImported("Brown Reagent Display", DungeonFolder + "/bottle_B_brown.fbx", workshop.transform,
+            new Vector3(-5.15f, 1.4f, 4.75f), new Vector3(0f, -20f, 0f), Vector3.one * 0.58f, null);
+        CreateImported("Atelier Coin Reserve", DungeonFolder + "/coin_stack_large.fbx", workshop.transform,
+            new Vector3(-4.6f, 0.52f, 6.28f), Vector3.zero, Vector3.one * 0.8f, gold);
     }
 
     private static void RepositionExistingSceneObjects()
