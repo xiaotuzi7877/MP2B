@@ -15801,7 +15801,7 @@ TextMesh:
   m_Anchor: 4
   m_Alignment: 1
   m_TabSize: 4
-  m_FontSize: 64
+  m_FontSize: 45
   m_FontStyle: 0
   m_RichText: 1
   m_Font: {fileID: 0}
@@ -50691,7 +50691,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1280042063}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.0001965577867, y: 0.9458730334, z: -0.0005728748536, w: -0.3245363428}
+  m_LocalRotation: {x: -0.00019655778, y: 0.945873, z: -0.00057287485, w: -0.32453635}
   m_LocalPosition: {x: -14.52185, y: -0.01775, z: -18.67095}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -50795,7 +50795,7 @@ Transform:
   - {fileID: 8100000019}
   - {fileID: 8100000023}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0.069403199, y: 217.87498, z: 0}
+  m_LocalEulerAnglesHint: {x: 0.0694032, y: 217.87498, z: 0}
 --- !u!1 &1280130284
 GameObject:
   m_ObjectHideFlags: 0
@@ -63916,7 +63916,7 @@ Transform:
   m_GameObject: {fileID: 1505154340}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.23, z: 0.025}
+  m_LocalPosition: {x: 0, y: 1.119, z: 0.025}
   m_LocalScale: {x: 0.90829223, y: 0.90829223, z: 0.90829223}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -80127,7 +80127,7 @@ Transform:
   m_GameObject: {fileID: 1680135902}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.045}
+  m_LocalPosition: {x: 0, y: -0.002, z: -0.045}
   m_LocalScale: {x: 0.9888059, y: 0.9888059, z: 0.9888059}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -80154,18 +80154,14 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1680135902}
-  m_Text: 'LOCKED
-
-    Plant + water Moon Herb
-
-    GRIP for help'
+  m_Text: "LOCKED\nPlant + water \nMoon Herb\nGRIP for help"
   m_OffsetZ: 0
   m_CharacterSize: 0.02
   m_LineSpacing: 1
   m_Anchor: 4
   m_Alignment: 1
   m_TabSize: 4
-  m_FontSize: 64
+  m_FontSize: 45
   m_FontStyle: 0
   m_RichText: 1
   m_Font: {fileID: 0}
@@ -96302,18 +96298,14 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1982068951}
-  m_Text: 'LOCKED
-
-    Irrigate a nearby plot
-
-    GRIP for help'
+  m_Text: "LOCKED\nIrrigate a \nnearby plot\nGRIP for help"
   m_OffsetZ: 0
   m_CharacterSize: 0.02
   m_LineSpacing: 1
   m_Anchor: 4
   m_Alignment: 1
   m_TabSize: 4
-  m_FontSize: 64
+  m_FontSize: 45
   m_FontStyle: 0
   m_RichText: 1
   m_Font: {fileID: 0}
@@ -98224,7 +98216,7 @@ TextMesh:
   m_Anchor: 4
   m_Alignment: 1
   m_TabSize: 4
-  m_FontSize: 64
+  m_FontSize: 45
   m_FontStyle: 0
   m_RichText: 1
   m_Font: {fileID: 0}
@@ -112182,19 +112174,19 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 291626167662404976, guid: 3a4ec84711f47cd4c8441d991e2aa755, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -24.684721
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 291626167662404976, guid: 3a4ec84711f47cd4c8441d991e2aa755, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.03
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 291626167662404976, guid: 3a4ec84711f47cd4c8441d991e2aa755, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -31.737498
+      value: -7.5
       objectReference: {fileID: 0}
     - target: {fileID: 291626167662404976, guid: 3a4ec84711f47cd4c8441d991e2aa755, type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.3245364
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 291626167662404976, guid: 3a4ec84711f47cd4c8441d991e2aa755, type: 3}
       propertyPath: m_LocalRotation.x
@@ -112202,7 +112194,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 291626167662404976, guid: 3a4ec84711f47cd4c8441d991e2aa755, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.9458732
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 291626167662404976, guid: 3a4ec84711f47cd4c8441d991e2aa755, type: 3}
       propertyPath: m_LocalRotation.z
@@ -112214,7 +112206,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 291626167662404976, guid: 3a4ec84711f47cd4c8441d991e2aa755, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 217.87498
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 291626167662404976, guid: 3a4ec84711f47cd4c8441d991e2aa755, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z

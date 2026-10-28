@@ -26,7 +26,7 @@ The Android package ID is `com.cs417.arcaneworkshop.mp2b`, so MP2B can be instal
 
 ## Migrated MP2A foundation
 
-- Quest 3 OpenXR setup, wand pointer, spellbook, teleport, smooth locomotion, snap turn, and comfort vignette
+- Quest 3 OpenXR setup, wand pointer, spellbook, teleport, smooth locomotion, continuous turning, and comfort vignette
 - 7×7 construction grid, placement feedback, Rune Foundations, and building costs
 - Moon Planter, Mana Still, Crystal Amplifier, Star Cauldron, and Merchant Gate
 - shared player resources, recipes, passive Stats, neighbor transfers, and collision interactions
@@ -98,13 +98,35 @@ See `Documentation/MP2B_SETUP.md` for ownership, extension points, and the compl
 - XRI owns movement, turning and grabbing across both islands. `FarmWorkshopRig` forwards right trigger/grip/B and left X to the workshop near the main island and uses the shared left-hand spellbook; Y can also open it outside the main island. The old workshop rig is suppressed, so its origin-centered movement clamp cannot pull the player off the bridge. The main island uses a mesh collider matching its visible ground instead of the oversized cylinder capsule collider.
 - The original `mp2aunity` project is unchanged. Moon Herb harvests and farm crop trades use the existing shared MoonHerb balance. The separate purple Bloom seed bag grows Conservatory Bloom; its first harvest grants exactly two shared Blooms. Existing spellbook resource text reflects both harvests.
 
-The shared XR rig uses left-stick walking at 1.3 m/s, right-stick 30-degree snap turns, and the existing right-stick teleport gesture. Main-island, bridge and farm teleport areas reject edge and occupied destinations. Walking uses the original comfort vignette; snap turns and teleports trigger its blink.
+The shared XR rig uses left-stick walking at 1.3 m/s, right-stick linear continuous turning (up to 60 degrees/second, proportional to horizontal stick input), and the existing right-stick teleport gesture. Snap turning is disabled. Main-island, bridge and farm teleport areas reject edge and occupied destinations. Walking uses the original comfort vignette; teleports trigger its blink. The scene starts the player on the main island at (0, 0, -7.5), facing its center.
 
 Workshop controls: right trigger selects/gathers/builds; right grip uses stations and machines; B repairs or performs a station's alternate action; left X cancels placement. Y toggles the left-hand spellbook, including outside the main island. The book opens on arrival at the workshop, hides while the left hand handles a farm object, and falls back near the view if left-hand tracking is lost. The original building, recipe, resource, goal and ritual UI is reused.
 
 Farm interaction has priority: a hovered or held XRI object reserves that hand's input; teleport aiming also suppresses workshop actions. Blocked presses are consumed and the right-hand buttons must be released before workshop use resumes. Farm near/far detection includes its visual layer. Safety barriers use Ignore Raycast while remaining solid to the player; station click volumes are triggers, and flattened platform colliders follow their visible meshes.
 
 Checks are available under `MP2B > Keliang`: static integration validation and Play Mode checks for real near/far detection, input arbitration, spellbook/station actions, teleport movement, bridge/station collision, cultivation, trade and irrigation. Play checks discard their temporary gameplay state on exit. Headset comfort, controller reach and hardware input still require a device walkthrough.
+
+### Farm quick-start for teammates
+
+Cross `mainToFarmBridge` to Lucas/Keliang's farm. Use GRIP to grab tools, select board buttons, and harvest mature plants; release GRIP to drop a held tool. With the watering can held, hold TRIGGER with its spout above a plot to water it. Left Y opens the shared spellbook.
+
+**Two seed bags:** the teal/green bag with silver details and the label **MOON** plants Moon Herb. The purple bag with gold details and the label **BLOOM** plants Conservatory Bloom. The Moon bag appears after the first tilling; the Bloom bag appears after your first personal Moon Herb harvest. Hold a bag and touch an empty tilled plot to plant. Both use the same seed stock (1 seed per planting). Moon Herbs can be grown repeatedly. In the current session-based implementation, Bloom can be harvested once and gives exactly **2 shared Blooms**; repeat Bloom planting is blocked after that harvest.
+
+**The two shop boards (identify them by their titles if viewing from the opposite side):**
+
+- **Left / FARM MARKET:** shows Moon Herbs, seeds, farm coins, fertilizer and stones. Point at a trade button and press GRIP. Sell 1 Moon Herb for 3 farm coins, buy 1 seed for 1 coin, or buy fertilizer for 2 coins. Farm coins are separate from the main workshop's Gold. Selling herbs also reduces the shared Moon Herb balance in the spellbook.
+- **Right / WORKSHOP:** buys sprinkler kits and pickaxe, tank and soil upgrades using stones and farm coins. Buying adds a kit to inventory; it does not automatically install it. Grab the corresponding carrier and touch the correct target: an empty tilled plot for a sprinkler, the pickaxe for its upgrade, the sprinkler for a tank upgrade, or a tilled plot for a soil upgrade. Locked or unaffordable purchases do not deduct resources.
+- **Tutorial / VERDANT CONSERVATORY — NEXT STEP:** shows the current goal, relevant controls and recovery instructions after errors. It updates as you progress; it is a guide, not another shop. When an action fails, read the short error and then this board for what to do next.
+
+**Recommended play order:**
+
+1. Grab the harrow and touch an untilled plot. This unlocks the teal MOON seed bag.
+2. Plant Moon Herb, then water it. Mining unlocks: grab the pickaxe and strike rocks for stones while the plant grows.
+3. Keep the soil moist; point at the mature herb and press GRIP to harvest. This unlocks the purple BLOOM seed bag. Sell extra herbs at FARM MARKET if you need coins.
+4. Plant and water Bloom on an empty tilled plot, then harvest it for 2 Blooms. This unlocks the sprinkler. Buy a sprinkler kit (5 stones + 3 farm coins), grab its carrier and touch an empty tilled plot to install it.
+5. Fill the sprinkler with the watering can and till a neighboring plot without a sprinkler. Let the sprinkler actually water that neighbor; filling its tank alone does not unlock the next stage.
+6. Buy the now-unlocked tank upgrade (4 stones + 4 farm coins). Grab its carrier and touch the sprinkler to increase capacity from 100 to 200.
+7. Open the spellbook with Y to see the shared Moon Herbs and Blooms. Walk to the foundry: 1 Bloom is consumed when forging the Astral Core. Keep the other Bloom for the main island's Convergence Altar. Harvests are already in shared inventory; no physical crop delivery platform is needed.
 
 ### Farm lessons and unlocks
 
