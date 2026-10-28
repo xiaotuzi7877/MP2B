@@ -241,7 +241,7 @@ TextMesh:
   m_GameObject: {fileID: 1754811347304030319}
   m_Text: 'Tank upgraded: 100 -> 200'
   m_OffsetZ: 0
-  m_CharacterSize: 0.02
+  m_CharacterSize: 0.012
   m_LineSpacing: 1
   m_Anchor: 4
   m_Alignment: 1
@@ -252,7 +252,7 @@ TextMesh:
   m_Font: {fileID: 0}
   m_Color:
     serializedVersion: 2
-    rgba: 4279179809
+    rgba: 4294967295
 --- !u!114 &3292271258220653175
 MonoBehaviour:
   m_ObjectHideFlags: 0
