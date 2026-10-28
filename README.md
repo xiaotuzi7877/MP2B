@@ -8,7 +8,7 @@ The repository begins from the stable, committed MP2A Arcane Workshop build and 
 
 - Michael (Ziyang Li) — central alchemy workshop, shared progression, integration, and Quest build
 - Lucas (Keliang) — Verdant Conservatory farm: cultivation, magic crops, Conservatory Bloom
-- Justin — Astral Foundry: star catching, rune power, forging the Astral Core
+- Justin's part — Astral Foundry: star catching, rune power, forging the Astral Core (designed and implemented by Michael on Justin's behalf)
 
 ## Required Unity version
 
@@ -45,7 +45,7 @@ Merchant Gate, Falling Stars, Integrity/repair, seven restoration goals) and unf
 2. **Lucas's bridge gate (south-west rim, facing `mainToFarmBridge`)** awakens when goal 6 is complete. Its receiver orders a **Conservatory Bloom**
    (2 Water + 1 Moon Herb + 6 Gold); a crate crosses the gate and lands on the pedestal.
 3. **Justin's bridge gate (south-east rim, mirroring Lucas's)** awakens after the first Bloom arrives; until then a solid seal
-   blocks it. Behind it a stone bridge (`mainToFoundryBridge`) leads to **Justin's Astral Foundry**, mirrored from Lucas's farm
+   blocks it. (Justin's part, built by Michael.) Behind it a stone bridge (`mainToFoundryBridge`) leads to **Justin's Astral Foundry**, mirrored from Lucas's farm
    at (28, 0, -36). The star-smith loop:
    - **Star Catcher** — 1 Crystal focuses it for 2 catches; each falling star it catches becomes a Star Fragment. An unfocused
      catcher lets the star crash into the island and drain 15 Rune Power.
@@ -60,7 +60,9 @@ Merchant Gate, Falling Stars, Integrity/repair, seven restoration goals) and unf
 6. The **Merchant Gate** sits on the east rim. Every refused or accepted press also shows a short world-space message on the
    line of sight, because in the headset the spellbook feedback line is easy to miss.
 
-Controls are unchanged from MP2A (mouse/keyboard on desktop, wand ray + spellbook in VR). Gates, receivers, the altar and the
+Controls are unchanged from MP2A (mouse/keyboard on desktop, wand ray + spellbook in VR). In Play Mode without a headset an
+**inspect view** replaces the fixed rig eye: middle drag or Alt + left drag looks around, wheel zooms, WASD/QE move, Tab cycles
+workshop / Lucas's farm / Justin's foundry / ritual islet, V switches to the player eye. Gates, receivers, the altar and the
 Nexus answer both click/trigger and right-click/grip, and their labels grow under the pointer.
 Walls, furniture, trees, gates and pedestals are solid in VR: smooth walking slides along them and teleports cannot land inside them.
 Comfort on Quest: the XRI jump is off, the left-hand spellbook follows the hand through a tremor filter, and the Android

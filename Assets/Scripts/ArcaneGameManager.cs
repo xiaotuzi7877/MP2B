@@ -131,6 +131,8 @@ namespace ArcaneWorkshop
         {
             sceneRigActive = true;
             sceneRigHead = head;
+            // Without a headset the rig's eye cannot move: give desktop Play Mode a free inspection camera.
+            DesktopInspectView.Attach(head);
         }
 
         public SpellbookPanel CreateSceneRigSpellbook(Transform mount)

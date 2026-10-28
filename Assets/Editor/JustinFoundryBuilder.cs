@@ -8,6 +8,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation;
 
 /// <summary>
+/// Author: Michael (Ziyang Li), implementing Justin's part of the team design.
 /// Builds Justin's Astral Foundry island (idempotent): a floating round island mirrored from Lucas's farm across the
 /// workshop's north-south axis, a stone bridge from Justin's south-east gate, and the three foundry machines.
 /// It reuses Michael Island's materials, Kenney/KayKit props and night lighting so the three islands read as one world.

@@ -10,6 +10,7 @@ namespace ArcaneWorkshop
     }
 
     /// <summary>
+    /// Author: Michael (Ziyang Li), implementing Justin's part of the team design.
     /// One clickable machine on Justin's Astral Foundry island. The mouse or VR ray press (trigger / grip) is routed
     /// here by ArcaneGameManager.ProcessPointer, exactly like the bridge gates and supply receivers on Michael Island.
     /// </summary>

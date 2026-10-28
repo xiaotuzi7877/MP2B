@@ -4,6 +4,7 @@ using UnityEngine;
 namespace ArcaneWorkshop
 {
     /// <summary>
+    /// Author: Michael (Ziyang Li), implementing Justin's part of the team design.
     /// Justin's Astral Foundry island: the star-smith's loop that turns falling stars into the Astral Core.
     /// 1. Star Catcher: focus it with Crystal; each focus charge catches one falling star as a Star Fragment.
     ///    An unfocused catcher lets the star crash into the island, which drains the Rune Well.

@@ -71,13 +71,14 @@ altar gold disc coplanar with floor; VR feedback text only appears on the spellb
 
 - [x] F9 (PR #5 merged, approved by Keliang23) Lucas gate barrier was solid forever (nothing calls `Link()`), blocking the walk onto `mainToFarmBridge`; it is now a clickable trigger where a real bridge docks, Justin's stays solid. Validator 125/125
 
-## G. Justin's Astral Foundry (2026-10-28, branch `justin/astral-foundry`)
-Justin's branch had no island work, so the foundry is completed here in Michael Island's art and interaction language.
+## G. Michael (work on Justin's part): Astral Foundry (2026-10-28, branch `michael/justin-foundry`)
+Author: Michael. Justin's branch had no island work, so Michael implemented Justin's part in Michael Island's art and interaction language.
 - [x] G1 Runtime: `AstralFoundry` + `FoundryStation` (Star Catcher -> Rune Well -> Astral Forge -> core crosses the bridge to Justin's receiver); falling stars, crash penalty, rune leak, forge animation, `>>` next-step labels, arrival tutorial, toasts and error sounds
 - [x] G2 Integration: pointer dispatch in `ProcessPointer`; XR rig pointer active on the foundry/bridge; `Region.Foundry` teleport surface; receiver redirects orders to the forge; `IslandLinkGate.DockBridge` seal; goal 7 hint
 - [x] G3 `JustinFoundryBuilder`: island mirrored from Keliang's farm (28,0,-36), stone bridge, rim + invisible edge wall, Michael Island edge-wall gap at 142°; run by Build Michael Island too
 - [x] G4 Validator 139/139 (foundry placement, bridge/teleport safety, seal, machines)
 - [x] G5 Play Mode: sealed gate blocks the CharacterController at r 8.8, awakened gate walks to the island; bridge sides and island edge hold; pointer-ray loop forge -> catcher -> well -> forge; core delivered (AstralCore 1); no Console errors
+- [x] G7 Desktop inspect view (no headset): free camera, Tab cycles workshop / farm / foundry / ritual islet, V returns to the player eye; mouse clicks still work through it
 - [ ] G6 On-headset check of the foundry (lab)
 
-▶ STOPPED HERE — pushed `justin/astral-foundry`; user opens the PR. Remaining: F8/G6 on headset, video, contribution summary.
+▶ STOPPED HERE — pushed `michael/justin-foundry`; user opens the PR. Remaining: F8/G6 on headset, video, contribution summary.

@@ -65,6 +65,8 @@ Do not depend on numeric goal indexes. Michael owns goal order and the final rit
 
 ## Justin's Astral Foundry (in the shared scene)
 
+Author: Michael (Ziyang Li), implementing Justin's part.
+
 `AstralFoundry` (root `Justin Astral Foundry`, built by `MP2B > Build Justin Foundry Island`) runs the foundry loop locally and
 only exchanges named resources: it spends Crystal (Star Catcher focus), Essence (Rune Well) and one Conservatory Bloom (forge
 binder), then hands the forged core to Justin's receiver:
