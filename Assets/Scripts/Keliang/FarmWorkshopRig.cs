@@ -115,7 +115,8 @@ public sealed class FarmWorkshopRig : MonoBehaviour
         Ray ray = new Ray(rightAim.position, rightAim.forward);
         bool hasHit = workshop.TryGetPointerHit(ray, out RaycastHit hit);
         bool bookTarget = hasHit && hit.collider.transform.IsChildOf(book.transform);
-        bool pointerActive = rightTracked && !rightBusy && !teleportBusy && (inWorkshop || (showBook && bookTarget));
+        bool inFoundry = AstralFoundry.InPointerZone(head.position);
+        bool pointerActive = rightTracked && !rightBusy && !teleportBusy && (inWorkshop || inFoundry || (showBook && bookTarget));
         if (pointerActive)
         {
             bool repairDown = armed && repair && !wasRepair;

@@ -62,3 +62,17 @@ Do not depend on numeric goal indexes. Michael owns goal order and the final rit
 4. Confirm Convergence Elixir becomes selectable in both desktop UI and the VR spellbook.
 5. Brew it at the Nexus and confirm the remaining Bloom and Astral Core both decrease by one.
 6. Confirm the `Unite the Disciplines` campaign goal completes.
+
+## Justin's Astral Foundry (in the shared scene)
+
+`AstralFoundry` (root `Justin Astral Foundry`, built by `MP2B > Build Justin Foundry Island`) runs the foundry loop locally and
+only exchanges named resources: it spends Crystal (Star Catcher focus), Essence (Rune Well) and one Conservatory Bloom (forge
+binder), then hands the forged core to Justin's receiver:
+
+```csharp
+receiver.Receive(1, "Justin's Astral Foundry"); // -> RegisterTeammateOutput(AstralCore, 1, ...)
+```
+
+`FoundryStation` components are routed by `ArcaneGameManager.ProcessPointer`; `AstralFoundry.InPointerZone(position)` keeps the
+shared XR rig's workshop pointer active on the foundry island and its bridge. `IslandLinkGate.DockBridge(seal, tutorial)` marks
+Justin's gate as docked: the solid seal blocks the bridge until the gate awakens on the first Bloom.

@@ -551,6 +551,13 @@ namespace ArcaneWorkshop
                 return;
             }
 
+            FoundryStation foundryStation = hit.collider.GetComponentInParent<FoundryStation>();
+            if (foundryStation != null)
+            {
+                foundryStation.Interact(this);
+                return;
+            }
+
             FinalRitualIndicator nexusCore = hit.collider.GetComponentInParent<FinalRitualIndicator>();
             if (nexusCore != null)
             {
@@ -891,7 +898,7 @@ namespace ArcaneWorkshop
                 new Goal { title = "First Brew", hint = "Build a Star Cauldron and brew any basic recipe.", isDone = () => potionsBrewed > 0, unlock = WorkshopUnlock.CrystalAmplifier },
                 new Goal { title = "Open Trade", hint = "Sell a Potion at the Merchant Gate.", isDone = () => potionsSold > 0, unlock = WorkshopUnlock.None },
                 new Goal { title = "Complete the Chain", hint = "Own a Planter, Still, Amplifier and Cauldron at the same time. This awakens Lucas's bridge gate (south-west).", isDone = HasFullChain, unlock = WorkshopUnlock.None },
-                new Goal { title = "Unite the Disciplines", hint = "Order Lucas's Bloom (south-west gate), then Justin's Astral Core (south-east gate), and trigger the Convergence Altar.", isDone = () => advancedPotionsBrewed > 0, unlock = WorkshopUnlock.None },
+                new Goal { title = "Unite the Disciplines", hint = "Get Lucas's Bloom (south-west bridge), cross Justin's south-east bridge to forge an Astral Core, then trigger the Convergence Altar.", isDone = () => advancedPotionsBrewed > 0, unlock = WorkshopUnlock.None },
                 new Goal { title = "Master Alchemist", hint = "Earn 100 Gold from potion sales.", isDone = () => lifetimeSales >= 100, unlock = WorkshopUnlock.FinalRitual }
             };
         }

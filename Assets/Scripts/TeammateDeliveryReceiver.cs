@@ -22,6 +22,7 @@ namespace ArcaneWorkshop
         [SerializeField] private Transform shipmentCrate;
         [SerializeField] private Transform beacon;
         [SerializeField] private WorkshopResourceAmount[] orderCost;
+        [SerializeField] private string orderRedirect;
 
         private bool shipping;
         private float shipTimer;
@@ -112,6 +113,13 @@ namespace ArcaneWorkshop
             return accepted;
         }
 
+        /// <summary>The teammate island makes this product itself: clicks explain where instead of placing an order.</summary>
+        public void RedirectOrders(string message)
+        {
+            orderRedirect = message;
+            RefreshLabel();
+        }
+
         public string CostLabel()
         {
             if (orderCost == null || orderCost.Length == 0)
@@ -143,6 +151,10 @@ namespace ArcaneWorkshop
             {
                 return "A " + product + " crate from " + expectedSource + "'s island is on its way.";
             }
+            if (!string.IsNullOrEmpty(orderRedirect))
+            {
+                return orderRedirect;
+            }
             return "Order 1 " + product + " from " + expectedSource + "'s island for " + CostLabel() + ".";
         }
 
@@ -157,10 +169,10 @@ namespace ArcaneWorkshop
             {
                 return;
             }
-            if ((gate != null && !gate.IsOpen) || shipping)
+            if ((gate != null && !gate.IsOpen) || shipping || !string.IsNullOrEmpty(orderRedirect))
             {
                 manager.SetFeedback(InteractionHint());
-                ArcaneAudio.Play(shipping ? SoundId.UiSelect : SoundId.UiError, transform.position);
+                ArcaneAudio.Play(shipping || (gate != null && gate.IsOpen) ? SoundId.UiSelect : SoundId.UiError, transform.position);
                 return;
             }
             if (orderCost != null && orderCost.Length > 0 && !manager.TrySpendResources(orderCost))
@@ -234,6 +246,7 @@ namespace ArcaneWorkshop
             string product = WorkshopProgression.ResourceDisplayName(acceptedResource).ToUpperInvariant();
             string line = gate != null && !gate.IsOpen ? "AWAITING BRIDGE GATE"
                 : shipping ? "CRATE INBOUND..."
+                : !string.IsNullOrEmpty(orderRedirect) ? "FORGED ACROSS THE BRIDGE"
                 : "CLICK TO ORDER  •  " + CostLabel();
             statusLabel.text = expectedSource.ToUpperInvariant() + " SUPPLY RECEIVER\n" + product + "  •  STORED " + stored + "\n" + line;
         }

@@ -7,8 +7,8 @@ The repository begins from the stable, committed MP2A Arcane Workshop build and 
 ## Team
 
 - Michael (Ziyang Li) — central alchemy workshop, shared progression, integration, and Quest build
-- Justin — arcane conservatory, cultivation, and familiar ecology
-- Lucas — astral foundry, rune logistics, and workshop defense
+- Lucas (Keliang) — Verdant Conservatory farm: cultivation, magic crops, Conservatory Bloom
+- Justin — Astral Foundry: star catching, rune power, forging the Astral Core
 
 ## Required Unity version
 
@@ -44,8 +44,15 @@ Merchant Gate, Falling Stars, Integrity/repair, seven restoration goals) and unf
 1. **Goals 1–6 (MP2A loop)** teach foundations, planting, mana links, brewing, selling, and the full production chain.
 2. **Lucas's bridge gate (south-west rim, facing `mainToFarmBridge`)** awakens when goal 6 is complete. Its receiver orders a **Conservatory Bloom**
    (2 Water + 1 Moon Herb + 6 Gold); a crate crosses the gate and lands on the pedestal.
-3. **Justin's bridge gate (south-east rim, mirroring Lucas's)** awakens after the first Bloom arrives. Its receiver orders an **Astral Core**
-   (2 Crystal + 1 Essence + 6 Gold).
+3. **Justin's bridge gate (south-east rim, mirroring Lucas's)** awakens after the first Bloom arrives; until then a solid seal
+   blocks it. Behind it a stone bridge (`mainToFoundryBridge`) leads to **Justin's Astral Foundry**, mirrored from Lucas's farm
+   at (28, 0, -36). The star-smith loop:
+   - **Star Catcher** — 1 Crystal focuses it for 2 catches; each falling star it catches becomes a Star Fragment. An unfocused
+     catcher lets the star crash into the island and drain 15 Rune Power.
+   - **Rune Well** — 1 Essence pours in 50 Rune Power, which slowly leaks away; the floor channel to the forge lights up with it.
+   - **Astral Forge** — 2 Star Fragments + 50 Rune Power + 1 Conservatory Bloom (Lucas's binder) forge an **Astral Core**, which
+     floats back across the bridge into Justin's receiver. The receiver no longer sells cores; it points the player to the forge.
+   Machines use the same click/trigger language as the gates and receivers; the next machine to use is marked `>>`.
 4. With both, the **Convergence Altar** (back wall) brews the Convergence Elixir (goal 7); 100 Gold of sales unlocks the
    **Final Ritual** at the same altar (goal 8).
 5. The **Nexus Core** floats over the unreachable **ritual islet** at the centre of the three islands (0, 3.2, -24) — dormant (blue),
@@ -63,13 +70,14 @@ quality level renders without real-time shadow maps (they shimmered with head mo
 
 - `TeammateDeliveryReceiver.Receive(amount, "Lucas's island", optionalModel)` — deliver Blooms / Astral Cores from a teammate scene.
 - `IslandLinkGate.Link()` — call once the teammate bridge exists; it drops the safety barrier. Lucas docks at the south-west gate
-  (Keliang's `mainToFarmBridge`), Justin on the south-east pier.
+  (Keliang's `mainToFarmBridge`), Justin at the south-east gate (`mainToFoundryBridge`, docked with `DockBridge`).
 - `ArcaneGameManager.RegisterTeammateOutput(kind, amount, source)` — shared-inventory API used by both of the above.
 
 ### Rebuild and validate
 
 - **MP2B › Build Michael Island** re-authors the MP2B layer (gates, receivers, altar, Nexus, rim, underside, sky, lighting, colliders). Safe to re-run.
-- **MP2B › Validate Michael Progression** runs 46 editor checks (progression, recipes, receivers, gates, scene contract).
+- **MP2B › Build Justin Foundry Island** re-authors Justin's island, bridge and gate seal (also run at the end of Build Michael Island).
+- **MP2B › Validate Michael Progression** runs 139 editor checks (progression, recipes, receivers, gates, foundry, scene contract).
 - Progress and hand-off notes: [`Documentation/CLAUDE_WORK_LOG.md`](Documentation/CLAUDE_WORK_LOG.md).
 
 ## Repository boundaries

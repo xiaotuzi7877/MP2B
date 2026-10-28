@@ -17,20 +17,20 @@ public static class MichaelIslandBuilder
     private const string ScenePath = "Assets/Scenes/ArcaneWorkshop.unity";
     private const string RootName = "Michael Island Links";
     private const string MaterialFolder = "Assets/Materials";
-    private const string Town = "Assets/ThirdParty/KenneyFantasyTown/Models/";
-    private const string Castle = "Assets/ThirdParty/KenneyCastle/Models/";
-    private const string Dungeon = "Assets/ThirdParty/KayKitDungeon/Models/";
+    internal const string Town = "Assets/ThirdParty/KenneyFantasyTown/Models/";
+    internal const string Castle = "Assets/ThirdParty/KenneyCastle/Models/";
+    internal const string Dungeon = "Assets/ThirdParty/KayKitDungeon/Models/";
     private const string AmbientCG = "Assets/ThirdParty/AmbientCG/";
 
-    private const float FloorTop = -0.16f;
+    internal const float FloorTop = -0.16f;
     private const float IslandRadius = 11f;
     private const float RimRadius = 10.75f;
 
     // Gate layout (yaw = facing out of the island). Keliang aligned Lucas's gate with `mainToFarmBridge` on the
     // south-west diagonal; Justin's gate mirrors it on the south-east diagonal and the Merchant Gate takes the east slot.
-    private const float GateRadius = 9f;
+    internal const float GateRadius = 9f;
     private const float LucasYaw = 218f;
-    private const float JustinYaw = 142f;
+    internal const float JustinYaw = 142f;
     private const float MerchantYaw = 90f;
     private const float GateGapDegrees = 15f;
 
@@ -79,11 +79,11 @@ public static class MichaelIslandBuilder
         CreateUnderside(root.transform, m);
         CreateRimBalustrade(root.transform, m);
 
-        // Lucas's real bridge (mainToFarmBridge) docks at his gate, so only Justin's gate gets a placeholder pier.
+        // Real bridges dock at both gates: Lucas's mainToFarmBridge and Justin's Astral Foundry bridge (JustinFoundryBuilder).
         IslandLinkGate lucasGate = CreateLinkGate(root.transform, manager, m, "Lucas", "Verdant Conservatory",
             LucasYaw, false, LucasColor, m.lucasGlow, m.lucasVeil, 6, false, WorkshopResourceKind.Gold);
         IslandLinkGate justinGate = CreateLinkGate(root.transform, manager, m, "Justin", "Astral Foundry",
-            JustinYaw, true, JustinColor, m.justinGlow, m.justinVeil, 0, true, WorkshopResourceKind.ConservatoryBloom);
+            JustinYaw, false, JustinColor, m.justinGlow, m.justinVeil, 0, true, WorkshopResourceKind.ConservatoryBloom);
 
         // Each receiver stands just inside its gate, on the outer flank (away from the south view to the ritual islet).
         CreateReceiver(root.transform, manager, m, lucasGate, "Lucas", WorkshopResourceKind.ConservatoryBloom,
@@ -113,6 +113,8 @@ public static class MichaelIslandBuilder
         FixWallOverlap();
         ConfigureSkyAndLighting(m);
 
+        JustinFoundryBuilder.BuildFoundry(manager, m);
+
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene, ScenePath);
         AssetDatabase.SaveAssets();
@@ -121,13 +123,13 @@ public static class MichaelIslandBuilder
 
     // ------------------------------------------------------------------ materials
 
-    private sealed class Materials
+    internal sealed class Materials
     {
         public Material paving, rock, rimStone, gold, metal, crystal, rune, flow;
         public Material lucasGlow, justinGlow, lucasVeil, justinVeil, nexusGlow, mote, sky;
     }
 
-    private static Materials LoadMaterials()
+    internal static Materials LoadMaterials()
     {
         Materials m = new Materials();
         m.paving = TexturedMaterial("IslandPaving", "PavingStones070", new Color(0.62f, 0.66f, 0.86f), new Vector2(7f, 7f), 0.18f);
@@ -175,7 +177,7 @@ public static class MichaelIslandBuilder
         return material;
     }
 
-    private static Material ColorMaterial(string name, Color color, float emission, float smoothness, float metallic)
+    internal static Material ColorMaterial(string name, Color color, float emission, float smoothness, float metallic)
     {
         Material material = GetOrCreate(name, Shader.Find("Standard"));
         material.color = color;
@@ -270,7 +272,7 @@ public static class MichaelIslandBuilder
         MoveMerchantGate();
     }
 
-    private static Vector3 YawDirection(float yaw)
+    internal static Vector3 YawDirection(float yaw)
     {
         return Quaternion.Euler(0f, yaw, 0f) * Vector3.forward;
     }
@@ -693,7 +695,7 @@ public static class MichaelIslandBuilder
         }
     }
 
-    private static ParticleSystem CreateSwirl(string name, Transform parent, Vector3 position, float radius, Color color, Material material)
+    internal static ParticleSystem CreateSwirl(string name, Transform parent, Vector3 position, float radius, Color color, Material material)
     {
         GameObject swirlObject = new GameObject(name);
         swirlObject.transform.SetParent(parent, false);
@@ -1171,7 +1173,7 @@ public static class MichaelIslandBuilder
         }
     }
 
-    private static Mesh TorusMesh(string name, float radius, float tube, int segments, int sides)
+    internal static Mesh TorusMesh(string name, float radius, float tube, int segments, int sides)
     {
         string path = "Assets/Meshes/" + name + ".asset";
         List<Vector3> vertices = new List<Vector3>();
@@ -1210,7 +1212,7 @@ public static class MichaelIslandBuilder
     }
 
     // Faceted crystal: an elongated octahedron with a slightly offset waist, saved once as an asset.
-    private static Mesh CrystalMesh()
+    internal static Mesh CrystalMesh()
     {
         const string path = "Assets/Meshes/ArcaneCrystal.asset";
         Mesh existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
@@ -1267,7 +1269,7 @@ public static class MichaelIslandBuilder
         EditorUtility.SetDirty(existing);
     }
 
-    private static GameObject CreatePrimitive(string name, PrimitiveType type, Transform parent, Vector3 position, Vector3 scale, Material material)
+    internal static GameObject CreatePrimitive(string name, PrimitiveType type, Transform parent, Vector3 position, Vector3 scale, Material material)
     {
         GameObject gameObject = GameObject.CreatePrimitive(type);
         gameObject.name = name;
@@ -1282,7 +1284,7 @@ public static class MichaelIslandBuilder
         return gameObject;
     }
 
-    private static GameObject CreateImported(string name, string path, Transform parent, Vector3 position, Vector3 euler, Vector3 scale, Material overrideMaterial)
+    internal static GameObject CreateImported(string name, string path, Transform parent, Vector3 position, Vector3 euler, Vector3 scale, Material overrideMaterial)
     {
         GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(path);
         if (asset == null)
@@ -1315,7 +1317,7 @@ public static class MichaelIslandBuilder
         return instance;
     }
 
-    private static GameObject CreateMeshObject(string name, Mesh mesh, Transform parent, Vector3 position, Vector3 euler, Vector3 scale, Material material)
+    internal static GameObject CreateMeshObject(string name, Mesh mesh, Transform parent, Vector3 position, Vector3 euler, Vector3 scale, Material material)
     {
         GameObject gameObject = new GameObject(name);
         gameObject.transform.SetParent(parent, false);
@@ -1327,7 +1329,7 @@ public static class MichaelIslandBuilder
         return gameObject;
     }
 
-    private static TextMesh CreateLabel(Transform parent, string text, Vector3 position, float characterSize, int fontSize, bool billboard)
+    internal static TextMesh CreateLabel(Transform parent, string text, Vector3 position, float characterSize, int fontSize, bool billboard)
     {
         GameObject labelObject = new GameObject("Michael Island Label");
         labelObject.transform.SetParent(parent, false);
@@ -1348,7 +1350,7 @@ public static class MichaelIslandBuilder
         return label;
     }
 
-    private static Light CreatePointLight(string name, Transform parent, Vector3 position, Color color, float intensity, float range)
+    internal static Light CreatePointLight(string name, Transform parent, Vector3 position, Color color, float intensity, float range)
     {
         GameObject lightObject = new GameObject(name);
         lightObject.transform.SetParent(parent, false);

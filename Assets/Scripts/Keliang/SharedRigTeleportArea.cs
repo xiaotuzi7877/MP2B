@@ -5,7 +5,7 @@ using UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation;
 // Authored walkable surfaces only, with space for the player's body at the destination.
 public sealed class SharedRigTeleportArea : TeleportationArea
 {
-    public enum Region { Workshop, Farm, Bridge }
+    public enum Region { Workshop, Farm, Bridge, Foundry }
     public Region region;
     public Transform regionSpace;
     public Vector2 halfExtents;
@@ -16,6 +16,10 @@ public sealed class SharedRigTeleportArea : TeleportationArea
         if (region == Region.Workshop)
         {
             if (new Vector2(local.x, local.z).magnitude > 10.1f) return false;
+        }
+        else if (region == Region.Foundry)
+        {
+            if (new Vector2(local.x, local.z).magnitude > halfExtents.x) return false;
         }
         else if (Mathf.Abs(local.x) > halfExtents.x || Mathf.Abs(local.z) > halfExtents.y) return false;
         foreach (var blocker in Physics.OverlapCapsule(point + Vector3.up * .35f, point + Vector3.up * 1.6f,
