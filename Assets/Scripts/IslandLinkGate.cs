@@ -32,6 +32,9 @@ namespace ArcaneWorkshop
         [SerializeField] private Collider safetyBarrier;
         [SerializeField] private AudioSource hum;
         [SerializeField] private ArcaneGameManager manager;
+        [SerializeField] private bool bridgeDocked;
+        [SerializeField] private Collider sealBarrier;
+        [SerializeField] private string awakenTutorial;
 
         private static readonly int ColorId = Shader.PropertyToID("_Color");
         private static readonly int EmissionId = Shader.PropertyToID("_EmissionColor");
@@ -45,6 +48,20 @@ namespace ArcaneWorkshop
         public string Owner { get { return owner; } }
         public IslandLinkState State { get { return state; } }
         public bool IsOpen { get { return state != IslandLinkState.Sealed; } }
+        public bool BridgeDocked { get { return bridgeDocked; } }
+        public Collider SealBarrier { get { return sealBarrier; } }
+
+        /// <summary>
+        /// A real teammate bridge docks at this gate. The optional solid seal blocks the walk until the gate awakens;
+        /// the clickable barrier itself is a trigger.
+        /// </summary>
+        public void DockBridge(Collider seal, string tutorial)
+        {
+            bridgeDocked = true;
+            sealBarrier = seal;
+            awakenTutorial = tutorial;
+            ApplyState(true);
+        }
 
         public void Configure(ArcaneGameManager gameManager, string ownerName, string title, Color accentColor,
             int goalsToAwaken, bool needsDelivery, WorkshopResourceKind deliveryKind,
@@ -112,6 +129,8 @@ namespace ArcaneWorkshop
             {
                 case IslandLinkState.Linked:
                     return owner + "'s " + islandTitle + " is linked. Walk across the bridge.";
+                case IslandLinkState.Awakened when bridgeDocked:
+                    return owner + "'s bridge gate is awake. Walk across the bridge to the " + islandTitle + ".";
                 case IslandLinkState.Awakened:
                     return owner + "'s bridge gate is awake. Trade crates now cross to the receiver beside it. " +
                         "The island itself docks here when the team scenes are merged.";
@@ -157,7 +176,7 @@ namespace ArcaneWorkshop
             CelebrationSpark.Burst(transform.position + Vector3.up * 2f, 14, manager.MoteMaterial);
             manager.SetFeedback("The bridge gate to " + owner + "'s " + islandTitle + " has awakened! " +
                 "Order supplies at its receiver.");
-            manager.ShowTutorial("gate-" + owner, "NEW - " + owner + "'s bridge gate: a border crossing to " + owner + "'s " + islandTitle +
+            manager.ShowTutorial("gate-" + owner, !string.IsNullOrEmpty(awakenTutorial) ? awakenTutorial : "NEW - " + owner + "'s bridge gate: a border crossing to " + owner + "'s " + islandTitle +
                 ". The receiver beside it is the customs dock: pay the listed ingredients and a crate crosses the gate to you.",
                 transform.position + Vector3.up * 1.5f);
         }
@@ -233,10 +252,14 @@ namespace ArcaneWorkshop
             {
                 safetyBarrier.enabled = state != IslandLinkState.Linked;
             }
+            if (sealBarrier != null)
+            {
+                sealBarrier.enabled = state == IslandLinkState.Sealed;
+            }
             if (label != null)
             {
                 string status = state == IslandLinkState.Linked ? "LINKED"
-                    : state == IslandLinkState.Awakened ? "AWAKENED  •  TRADE ROUTE OPEN"
+                    : state == IslandLinkState.Awakened ? (bridgeDocked ? "AWAKENED  •  BRIDGE OPEN" : "AWAKENED  •  TRADE ROUTE OPEN")
                     : "SEALED  •  " + RequirementText().ToUpperInvariant();
                 label.text = owner.ToUpperInvariant() + "'S " + islandTitle.ToUpperInvariant() + "\n" + status;
                 label.color = open ? Color.Lerp(accent, Color.white, 0.35f) : new Color(0.7f, 0.76f, 0.9f);

@@ -234,12 +234,19 @@ namespace ArcaneWorkshop.Editor
                 lucasGate |= gates[i].Owner == "Lucas";
                 justinGate |= gates[i].Owner == "Justin";
                 Collider barrier = gates[i].GetComponent<Collider>();
-                bool docked = gates[i].Owner == "Lucas" && GameObject.Find("mainToFarmBridge") != null;
+                bool docked = (gates[i].Owner == "Lucas" && GameObject.Find("mainToFarmBridge") != null) ||
+                              (gates[i].Owner == "Justin" && GameObject.Find("mainToFoundryBridge") != null);
                 Check(barrier != null, gates[i].Owner + "'s bridge gate needs a clickable barrier.", failures);
                 Check(barrier == null || (docked ? barrier.isTrigger && gates[i].GetComponent<WalkBlocker>() == null
                                                  : !barrier.isTrigger && gates[i].GetComponent<WalkBlocker>() != null),
                     gates[i].Owner + (docked ? "'s gate must let the player walk onto mainToFarmBridge."
                                              : "'s gate needs a solid safety barrier until its bridge exists."), failures);
+                if (gates[i].Owner == "Justin" && docked)
+                {
+                    Collider seal = gates[i].SealBarrier;
+                    Check(gates[i].BridgeDocked && seal != null && !seal.isTrigger && seal.GetComponent<WalkBlocker>() != null,
+                        "Justin's gate needs a solid seal that blocks the foundry bridge until it awakens.", failures);
+                }
             }
             Check(gates.Length == 2 && lucasGate && justinGate, "Michael Island needs exactly two bridge gates: Lucas and Justin.", failures);
 
@@ -257,6 +264,7 @@ namespace ArcaneWorkshop.Editor
             Check(UnityEngine.Object.FindAnyObjectByType<FinalRitualIndicator>() != null, "The floating Nexus Core is missing.", failures);
             Check(GameObject.Find("Workshop Title Plaque") != null, "The visible workshop title plaque is missing.", failures);
             RunLayoutChecks(gates, failures);
+            RunFoundryChecks(gates, failures);
 
             GameObject managerHost = null;
             GameObject receiverHost = null;
@@ -308,6 +316,77 @@ namespace ArcaneWorkshop.Editor
                 if (receiverHost != null) UnityEngine.Object.DestroyImmediate(receiverHost);
                 if (managerHost != null) UnityEngine.Object.DestroyImmediate(managerHost);
             }
+        }
+
+        // Justin's Astral Foundry island: placement, bridge, walk/teleport safety and the three machines.
+        private static void RunFoundryChecks(IslandLinkGate[] gates, List<string> failures)
+        {
+            AstralFoundry foundry = UnityEngine.Object.FindAnyObjectByType<AstralFoundry>();
+            GameObject bridge = GameObject.Find("mainToFoundryBridge");
+            Check(foundry != null && bridge != null, "Justin's Astral Foundry island and its bridge are missing.", failures);
+            if (foundry == null || bridge == null)
+            {
+                return;
+            }
+
+            GameObject farm = GameObject.Find("keliangFarmIsland");
+            if (farm != null)
+            {
+                Vector3 mirrored = new Vector3(-farm.transform.position.x, farm.transform.position.y, farm.transform.position.z);
+                Check(Vector3.Distance(mirrored, foundry.transform.position) < 0.05f,
+                    "Justin's foundry must mirror Lucas's farm across the workshop.", failures);
+            }
+            Check(foundry.Contains(foundry.transform.position) && foundry.Contains(bridge.transform.position) &&
+                  !foundry.Contains(Vector3.zero) && !foundry.Contains(new Vector3(0f, 0f, -24f)),
+                "The foundry pointer zone must cover the island and bridge but not Michael Island or the ritual islet.", failures);
+
+            Transform deck = bridge.transform.Find("walkableDeck");
+            SharedRigTeleportArea deckArea = deck != null ? deck.GetComponent<SharedRigTeleportArea>() : null;
+            Check(deckArea != null && deckArea.region == SharedRigTeleportArea.Region.Bridge && !deck.GetComponent<Collider>().isTrigger,
+                "The foundry bridge deck must be walkable and a safe teleport surface.", failures);
+            bool floorArea = false;
+            foreach (SharedRigTeleportArea area in foundry.GetComponentsInChildren<SharedRigTeleportArea>())
+            {
+                floorArea |= area.region == SharedRigTeleportArea.Region.Foundry;
+            }
+            Check(floorArea, "The foundry floor must be a safe teleport surface.", failures);
+
+            int barriers = 0;
+            foreach (Collider c in bridge.GetComponentsInChildren<Collider>())
+            {
+                if (c.name.EndsWith("SafetyBarrier") && c.gameObject.layer == 2 && !c.isTrigger) barriers++;
+            }
+            Check(barriers == 4, "The foundry bridge needs two side and two gate safety barriers on Ignore Raycast.", failures);
+            Transform boundary = foundry.transform.Find("foundryBoundary");
+            Check(boundary != null && boundary.childCount > 20, "The foundry island needs an invisible edge wall.", failures);
+
+            GameObject workshopBoundary = GameObject.Find("workshopBoundary");
+            bool gapOpen = true;
+            if (workshopBoundary != null)
+            {
+                foreach (Transform wall in workshopBoundary.transform)
+                {
+                    float yaw = Mathf.Atan2(wall.position.x, wall.position.z) * Mathf.Rad2Deg;
+                    gapOpen &= Mathf.Abs(Mathf.DeltaAngle(yaw, 142f)) >= 9f;
+                }
+            }
+            Check(gapOpen, "Michael Island's edge wall must open where the foundry bridge lands.", failures);
+
+            FoundryStation[] stations = foundry.GetComponentsInChildren<FoundryStation>();
+            bool catcher = false, well = false, forge = false;
+            foreach (FoundryStation station in stations)
+            {
+                catcher |= station.Kind == FoundryStationKind.StarCatcher;
+                well |= station.Kind == FoundryStationKind.RuneWell;
+                forge |= station.Kind == FoundryStationKind.AstralForge;
+                Collider c = station.GetComponent<Collider>();
+                Check(c != null && !c.isTrigger && station.GetComponent<WalkBlocker>() != null && station.Label != null &&
+                      station.GetComponent<HoverHighlight>() != null,
+                    station.name + " needs a solid clickable body, a label and hover feedback.", failures);
+            }
+            Check(stations.Length == 3 && catcher && well && forge,
+                "The foundry needs exactly three machines: Star Catcher, Rune Well and Astral Forge.", failures);
+            Check(foundry.ForgeMissing() != null, "A fresh foundry must not be able to forge.", failures);
         }
 
         private static void Check(bool condition, string message, List<string> failures)

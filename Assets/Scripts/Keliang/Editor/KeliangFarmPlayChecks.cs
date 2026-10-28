@@ -55,6 +55,10 @@ public sealed class KeliangFarmPlayProbe : MonoBehaviour
         priorVolume = AudioListener.volume;
         AudioListener.volume = 0f;
         yield return new WaitForSecondsRealtime(.8f);
+        // These checks drive the player's own eye camera; park the desktop inspect view first.
+        var inspect = UnityEngine.Object.FindAnyObjectByType<ArcaneWorkshop.DesktopInspectView>();
+        if (inspect != null) inspect.SetInspecting(false);
+        yield return null;
         IEnumerator checks = Checks();
         while (true)
         {

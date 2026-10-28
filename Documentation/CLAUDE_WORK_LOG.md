@@ -71,4 +71,22 @@ altar gold disc coplanar with floor; VR feedback text only appears on the spellb
 
 - [x] F9 (PR #5 merged, approved by Keliang23) Lucas gate barrier was solid forever (nothing calls `Link()`), blocking the walk onto `mainToFarmBridge`; it is now a clickable trigger where a real bridge docks, Justin's stays solid. Validator 125/125
 
-▶ STOPPED HERE — pushed `michael/lucas-gate-walkable`; user opens the PR, Lucas approves. Remaining: F8 on headset, video, contribution summary.
+## G. Michael (work on Justin's part): Astral Foundry (2026-10-28, branch `michael/justin-foundry`)
+Author: Michael. Justin's branch had no island work, so Michael implemented Justin's part in Michael Island's art and interaction language.
+- [x] G1 Runtime: `AstralFoundry` + `FoundryStation` (Star Catcher -> Rune Well -> Astral Forge -> core crosses the bridge to Justin's receiver); falling stars, crash penalty, rune leak, forge animation, `>>` next-step labels, arrival tutorial, toasts and error sounds
+- [x] G2 Integration: pointer dispatch in `ProcessPointer`; XR rig pointer active on the foundry/bridge; `Region.Foundry` teleport surface; receiver redirects orders to the forge; `IslandLinkGate.DockBridge` seal; goal 7 hint
+- [x] G3 `JustinFoundryBuilder`: island mirrored from Keliang's farm (28,0,-36), stone bridge, rim + invisible edge wall, Michael Island edge-wall gap at 142°; run by Build Michael Island too
+- [x] G4 Validator 139/139 (foundry placement, bridge/teleport safety, seal, machines)
+- [x] G5 Play Mode: sealed gate blocks the CharacterController at r 8.8, awakened gate walks to the island; bridge sides and island edge hold; pointer-ray loop forge -> catcher -> well -> forge; core delivered (AstralCore 1); no Console errors
+- [x] G7 Desktop inspect view (no headset): free camera, Tab cycles workshop / farm / foundry / ritual islet, V returns to the player eye; mouse clicks still work through it
+- [x] G8 Self-audit before the headset test:
+  - foundry teleport surfaces stay off until Justin's gate awakens (no teleporting past the seal); machines refuse while sealed
+  - stars only fall when the player is within 30 m (their 60%-spatial crash sounds no longer reach Michael Island)
+  - only Rune Power above 50 leaks, so charging before catching stars is never wasted
+  - forge collider covers furnace to anvil; landing-post colliders; walls close the slivers beside the foundry landing
+  - inspect view never turns on with a headset (mobile platform, XR device, display subsystem or head presence all count)
+  - after a core lands with no Bloom left, the player is told the altar still needs one more Bloom
+  - Keliang's checks updated where Michael's merged work had made them stale (rig-space spellbook, removed teammate stations, foundry teleport surfaces, inspect camera parked): his rig/teleport/bridge checks pass 55/55; his remaining failure "Tilling and planting create linked crop prefabs" is his farm-stage seed lock, untouched here
+- [ ] G6 On-headset check of the foundry (lab)
+
+▶ STOPPED HERE — pushed `michael/justin-foundry`; user opens the PR. Remaining: F8/G6 on headset, video, contribution summary.
