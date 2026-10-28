@@ -206,9 +206,11 @@ public static class KeliangRigPlayChecks
 
             check(rig.GetComponentInChildren<ComfortVignette>() != null, "Shared rig has the original comfort overlay");
             check(rig.GetComponentInChildren<ContinuousMoveProvider>().moveSpeed == 1.3f, "Walking uses the original 1.3 m/s speed");
-            check(rig.GetComponentInChildren<SnapTurnProvider>().isActiveAndEnabled &&
-                rig.GetComponentInChildren<SnapTurnProvider>().turnAmount == 30f &&
-                !rig.GetComponentsInChildren<ContinuousTurnProvider>().Any(t => t.enabled), "Only 30-degree snap turning is enabled");
+            check(rig.GetComponentInChildren<LinearTurnProvider>().isActiveAndEnabled &&
+                rig.GetComponentInChildren<LinearTurnProvider>().turnSpeed == 60f &&
+                !rig.GetComponentsInChildren<SnapTurnProvider>(true).Any(t => t.enabled) &&
+                !rig.GetComponentsInChildren<ContinuousTurnProvider>(true).Any(t => t.enabled && !(t is LinearTurnProvider)),
+                "Only linear continuous turning at 60 degrees per second is enabled");
             // Justin's foundry adds its own floor and bridge surfaces; this check covers the main island, farm and farm bridge.
             var areas = UnityEngine.Object.FindObjectsByType<SharedRigTeleportArea>(FindObjectsSortMode.None)
                 .Where(a => a.regionSpace == null || !a.regionSpace.name.Contains("Foundry")).ToArray();
