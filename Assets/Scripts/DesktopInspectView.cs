@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR;
@@ -69,12 +70,27 @@ namespace ArcaneWorkshop
             SetInspecting(!HeadsetRunning());
         }
 
+        // Any sign of a running headset keeps the rig's eye camera: never risk a black headset.
         private static bool HeadsetRunning()
         {
-            return XRSettings.isDeviceActive;
+            if (Application.isMobilePlatform || XRSettings.isDeviceActive)
+            {
+                return true;
+            }
+            List<XRDisplaySubsystem> displays = new List<XRDisplaySubsystem>();
+            SubsystemManager.GetSubsystems(displays);
+            foreach (XRDisplaySubsystem display in displays)
+            {
+                if (display.running)
+                {
+                    return true;
+                }
+            }
+            UnityEngine.XR.InputDevice head = InputDevices.GetDeviceAtXRNode(XRNode.Head);
+            return head.isValid && head.TryGetFeatureValue(UnityEngine.XR.CommonUsages.userPresence, out bool present) && present;
         }
 
-        private void SetInspecting(bool on)
+        public void SetInspecting(bool on)
         {
             if (on && HeadsetRunning())
             {

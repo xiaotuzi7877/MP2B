@@ -149,7 +149,10 @@ public static class KeliangRigPlayChecks
             check(book.gameObject.activeSelf && book.transform.parent.parent == rig.transform,
                 "Lost left-hand tracking moves the menu to the rig near the view");
             Input();
-            check(book.transform.parent.parent == left, "Restored left-hand tracking reattaches the book");
+            // Since the tremor filter the book lives in rig space and snaps back onto the hand pose when tracking returns.
+            check(book.transform.parent.parent == rig.transform &&
+                  Vector3.Distance(book.transform.parent.position, left.TransformPoint(new Vector3(0f, .11f, .05f))) < .02f,
+                "Restored left-hand tracking reattaches the book");
             Input(menu: true);
             check(!book.gameObject.activeSelf, "Y closes the book");
             Input(); Input(menu: true); Input();
@@ -168,17 +171,28 @@ public static class KeliangRigPlayChecks
             Input(); Input(cancel: true);
             check(!manager.Placing, "Left X cancels workshop placement");
 
-            var foundry = UnityEngine.Object.FindObjectsByType<TeamExpansionStation>(FindObjectsSortMode.None)
-                .Single(s => s.Kind == TeamStationKind.AstralFoundry);
-            Vector3 foundryAim = foundry.GetComponent<BoxCollider>().bounds.center;
+            // Justin's Astral Foundry (Michael's build) replaced the old teammate station: grip and B both use its Star Catcher.
+            var catcher = UnityEngine.Object.FindObjectsByType<FoundryStation>(FindObjectsSortMode.None)
+                .Single(s => s.Kind == FoundryStationKind.StarCatcher);
+            var foundry = catcher.GetComponentInParent<AstralFoundry>();
+            if (!foundry.IsOpen)
+            {
+                // The gate polls for the first Bloom twice a second; this synchronous check awakens it directly.
+                manager.RegisterTeammateOutput(WorkshopResourceKind.ConservatoryBloom, 1, "Lucas");
+                var gate = UnityEngine.Object.FindObjectsByType<IslandLinkGate>(FindObjectsSortMode.None).Single(g => g.Owner == "Justin");
+                typeof(IslandLinkGate).GetMethod("Awaken", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(gate, null);
+            }
+            manager.AddResource(WorkshopResourceKind.Crystal, 2);
+            Vector3 foundryAim = catcher.GetComponent<BoxCollider>().bounds.center;
             aim.transform.SetPositionAndRotation(foundryAim + Vector3.up * 4f, Quaternion.LookRotation(Vector3.down, Vector3.forward));
             Physics.SyncTransforms();
-            int fragments = foundry.StarFragments;
-            float shield = foundry.Shield;
+            int charges = foundry.FocusCharges;
             Input(); Input(grip: true);
-            check(foundry.StarFragments == fragments + 1, "Grip activates the actual teammate foundry station");
+            check(foundry.FocusCharges == charges + AstralFoundry.ChargesPerCrystal, "Grip activates the actual teammate foundry station");
+            charges = foundry.FocusCharges;
             Input(); Input(repair: true);
-            check(foundry.Shield > shield + 30f, "B reaches the station's modifier action without triggering normal use");
+            check(foundry.FocusCharges == Mathf.Min(AstralFoundry.MaxCharges, charges + AstralFoundry.ChargesPerCrystal),
+                "B reaches the foundry station without being swallowed by the workshop");
             aim.transform.SetPositionAndRotation(new Vector3(0f, 5f, -2f), Quaternion.identity);
             Physics.SyncTransforms();
 
@@ -195,7 +209,9 @@ public static class KeliangRigPlayChecks
             check(rig.GetComponentInChildren<SnapTurnProvider>().isActiveAndEnabled &&
                 rig.GetComponentInChildren<SnapTurnProvider>().turnAmount == 30f &&
                 !rig.GetComponentsInChildren<ContinuousTurnProvider>().Any(t => t.enabled), "Only 30-degree snap turning is enabled");
-            var areas = UnityEngine.Object.FindObjectsByType<SharedRigTeleportArea>(FindObjectsSortMode.None);
+            // Justin's foundry adds its own floor and bridge surfaces; this check covers the main island, farm and farm bridge.
+            var areas = UnityEngine.Object.FindObjectsByType<SharedRigTeleportArea>(FindObjectsSortMode.None)
+                .Where(a => a.regionSpace == null || !a.regionSpace.name.Contains("Foundry")).ToArray();
             check(areas.Length == 3, "Main island, bridge and farm have teleport surfaces");
             var bridgeArea = areas.Single(a => a.region == SharedRigTeleportArea.Region.Bridge);
             check(bridgeArea.CanLand(bridgeArea.regionSpace.position), "Bridge center accepts teleport landing");
@@ -206,8 +222,13 @@ public static class KeliangRigPlayChecks
             check(!bridgeArea.CanLand(bridgeArea.regionSpace.position), "Teleport rejects occupied landing space");
             UnityEngine.Object.DestroyImmediate(blocker);
 
+            // Michael's altar and Justin's foundry machines are deliberately solid bodies (marked WalkBlocker);
+            // anything else with a station click volume must stay a trigger.
             check(UnityEngine.Object.FindObjectsByType<TeamExpansionStation>(FindObjectsSortMode.None)
-                .All(s => s.GetComponents<BoxCollider>().All(c => c.isTrigger)), "Station click volumes no longer form solid invisible boxes");
+                    .All(s => s.GetComponents<BoxCollider>().All(c => c.isTrigger || s.GetComponent<WalkBlocker>() != null)) &&
+                  UnityEngine.Object.FindObjectsByType<FoundryStation>(FindObjectsSortMode.None)
+                    .All(s => s.GetComponent<WalkBlocker>() != null),
+                "Station click volumes no longer form solid invisible boxes");
             var boundary = GameObject.Find("workshopBoundary");
             check(boundary.GetComponentsInChildren<Collider>().All(c => c.gameObject.layer == 2 && !c.isTrigger),
                 "Safety boundaries still block bodies but not the workshop ray");
@@ -238,15 +259,16 @@ public static class KeliangRigPlayChecks
 
     private static void CheckStationApproach(Action<bool, string> check)
     {
-        var station = UnityEngine.Object.FindObjectsByType<TeamExpansionStation>(FindObjectsSortMode.None)
-            .Single(s => s.Kind == TeamStationKind.ArcaneConservatory);
+        // The old teammate stations were replaced; Justin's Star Catcher is the station with an open approach.
+        var station = UnityEngine.Object.FindObjectsByType<FoundryStation>(FindObjectsSortMode.None)
+            .Single(s => s.Kind == FoundryStationKind.StarCatcher);
         var walker = new GameObject("stationCollisionProbe");
         var controller = walker.AddComponent<CharacterController>();
         controller.height = 1.7f;
         controller.radius = .2f;
         controller.center = Vector3.up * .85f;
-        Vector3 start = station.transform.position + new Vector3(2.8f, .25f, -1.7f);
-        Vector3 end = station.transform.position + new Vector3(1.8f, .25f, -1.7f);
+        Vector3 start = station.transform.TransformPoint(new Vector3(0f, .25f, 2.4f));
+        Vector3 end = station.transform.TransformPoint(new Vector3(0f, .25f, 1.15f));
         walker.transform.position = start;
         Physics.SyncTransforms();
         for (int i = 1; i <= 20; i++) controller.Move(Vector3.Lerp(start, end, i / 20f) - walker.transform.position + Vector3.down * .02f);

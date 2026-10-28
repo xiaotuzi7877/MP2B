@@ -328,7 +328,8 @@ public static class KeliangFarmInstaller
         Require(UnityEngine.Object.FindAnyObjectByType<FarmWorkshopRig>() != null, "Workshop pointer adapter");
         Require(GameObject.Find("mainToFarmBridge/walkableDeck").GetComponent<BoxCollider>().enabled, "Bridge deck collider");
         Require(LayerMask.NameToLayer("farmSoil") == 8, "Watering soil layer");
-        Require(UnityEngine.Object.FindObjectsByType<TeamExpansionStation>(FindObjectsSortMode.None).Length == 3, "Original teammate stations retained");
+        // Michael Island keeps one station (the Convergence Altar); Justin's machines live on the Astral Foundry island.
+        Require(UnityEngine.Object.FindObjectsByType<TeamExpansionStation>(FindObjectsSortMode.None).Length == 1, "Original teammate stations retained");
         foreach (var root in SceneManager.GetActiveScene().GetRootGameObjects())
             foreach (var t in root.GetComponentsInChildren<Transform>(true))
                 Require(GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(t.gameObject) == 0, "No missing scripts: " + t.name);

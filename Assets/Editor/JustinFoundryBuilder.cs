@@ -132,12 +132,17 @@ public static class JustinFoundryBuilder
         CreateDecor(t, m, banner);
         CreateTitle(t);
         CreateLighting(t, m);
-        AddTeleportAreas(floor, deck, t);
+        Behaviour[] surfaces = AddTeleportAreas(floor, deck, t);
 
         AstralFoundry foundry = root.AddComponent<AstralFoundry>();
         foundry.Configure(manager, gate, receiver, catcher, well, forge, catchPoint, crash.transform, fragmentSlots, lamps,
             channel, crystal, hammer, forgeLight, sparks, core, output, path, bridgeNear, bridgeFar, IslandRadius,
             starGlow, MichaelIslandBuilder.JustinColor);
+        foundry.SetTeleportSurfaces(surfaces);
+        // The forge body reaches from the furnace back to the anvil front.
+        BoxCollider forgeBox = forge.GetComponent<BoxCollider>();
+        forgeBox.center = new Vector3(0f, 1.6f, -0.35f);
+        forgeBox.size = new Vector3(4.6f, 3.2f, 3.9f);
         foreach (FoundryStation station in new[] { catcher, well, forge })
         {
             station.Configure(station.Kind, foundry, station.Label);
@@ -229,6 +234,15 @@ public static class JustinFoundryBuilder
             wall.layer = 2;
             BoxCollider box = wall.AddComponent<BoxCollider>();
             box.size = new Vector3(panelScale + 0.25f, 3f, 0.18f);
+        }
+        // Close the slivers between the bridge rails and the first rim walls beside the landing.
+        for (int side = -1; side <= 1; side += 2)
+        {
+            GameObject corner = new GameObject("landingCornerBarrier" + (side < 0 ? "L" : "R"));
+            corner.transform.SetParent(boundary.transform, false);
+            corner.transform.localPosition = new Vector3(side * 1.95f, 1.5f, -7.55f);
+            corner.layer = 2;
+            corner.AddComponent<BoxCollider>().size = new Vector3(0.95f, 3f, 0.6f);
         }
     }
 
@@ -617,6 +631,11 @@ public static class JustinFoundryBuilder
                 new Vector3(side * 1.9f, FloorTop, -6.9f), Vector3.zero, new Vector3(1.6f, 1.6f, 1.6f), m.rimStone);
             MichaelIslandBuilder.CreateImported("Landing Lantern " + side, MichaelIslandBuilder.Town + "lantern.fbx", t,
                 new Vector3(side * 1.9f, FloorTop + 1.75f, -6.9f), Vector3.zero, Vector3.one * 0.8f, null);
+            BoxCollider post = new GameObject("Landing Post Collider " + side).AddComponent<BoxCollider>();
+            post.transform.SetParent(t, false);
+            post.transform.localPosition = new Vector3(side * 1.9f, FloorTop + 1f, -6.9f);
+            post.size = new Vector3(0.5f, 2f, 0.5f);
+            post.gameObject.AddComponent<WalkBlocker>();
         }
     }
 
@@ -652,22 +671,25 @@ public static class JustinFoundryBuilder
         motes.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
     }
 
-    private static void AddTeleportAreas(GameObject floor, GameObject deck, Transform island)
+    private static Behaviour[] AddTeleportAreas(GameObject floor, GameObject deck, Transform island)
     {
         GameObject rig = GameObject.Find("playerRig");
         TeleportationProvider provider = rig != null ? rig.GetComponentInChildren<TeleportationProvider>(true) : null;
         if (provider == null)
         {
             Debug.LogWarning("playerRig has no TeleportationProvider: foundry teleport surfaces left unconfigured.");
-            return;
+            return new Behaviour[0];
         }
-        AddArea(floor, SharedRigTeleportArea.Region.Foundry, island, new Vector2(IslandRadius - 0.6f, IslandRadius - 0.6f), provider);
-        AddArea(deck, SharedRigTeleportArea.Region.Bridge, deck.transform.parent,
-            new Vector2(BridgeWidth * 0.5f - 0.4f, BridgeLength * 0.5f - 0.25f), provider);
+        return new Behaviour[]
+        {
+            AddArea(floor, SharedRigTeleportArea.Region.Foundry, island, new Vector2(IslandRadius - 0.6f, IslandRadius - 0.6f), provider),
+            AddArea(deck, SharedRigTeleportArea.Region.Bridge, deck.transform.parent,
+                new Vector2(BridgeWidth * 0.5f - 0.4f, BridgeLength * 0.5f - 0.25f), provider)
+        };
     }
 
     // Same settings as KeliangRigSetup.AddArea, so all teleport surfaces behave alike.
-    private static void AddArea(GameObject target, SharedRigTeleportArea.Region region, Transform space, Vector2 halfExtents,
+    private static SharedRigTeleportArea AddArea(GameObject target, SharedRigTeleportArea.Region region, Transform space, Vector2 halfExtents,
         TeleportationProvider provider)
     {
         SharedRigTeleportArea area = target.AddComponent<SharedRigTeleportArea>();
@@ -682,6 +704,7 @@ public static class JustinFoundryBuilder
         area.upNormalToleranceDegrees = 25f;
         area.colliders.Clear();
         area.colliders.Add(target.GetComponent<Collider>());
+        return area;
     }
 
     // ------------------------------------------------------------------ helpers

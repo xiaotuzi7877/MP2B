@@ -25,6 +25,7 @@ namespace ArcaneWorkshop
         private const float StarFallSeconds = 2.4f;
         private const float CrashDrain = 15f;
         private const float RuneLeakPerSecond = 0.15f;
+        private const float StarRainRange = 30f;
         private const float ForgeSeconds = 3.5f;
         private const float DeliverySeconds = 5.5f;
 
@@ -51,6 +52,7 @@ namespace ArcaneWorkshop
         [SerializeField] private float islandRadius = 8f;
         [SerializeField] private Material starMaterial;
         [SerializeField] private Color accent = new Color(0.78f, 0.42f, 1f);
+        [SerializeField] private Behaviour[] teleportSurfaces;
 
         private static readonly List<AstralFoundry> Active = new List<AstralFoundry>();
         private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -73,6 +75,7 @@ namespace ArcaneWorkshop
         private float starT;
         private float labelTimer;
         private bool playerWasHere;
+        private bool surfacesOpen = true;
         private MaterialPropertyBlock block;
 
         public int Fragments { get { return fragments; } }
@@ -114,6 +117,12 @@ namespace ArcaneWorkshop
             starMaterial = starGlow;
             accent = accentColor;
             RefreshLabels();
+        }
+
+        /// <summary>Teleport surfaces (bridge deck, island floor) only accept the player once the gate is awake.</summary>
+        public void SetTeleportSurfaces(Behaviour[] surfaces)
+        {
+            teleportSurfaces = surfaces;
         }
 
         /// <summary>True on the foundry island or its bridge: the shared rig keeps its workshop pointer active here.</summary>
@@ -187,13 +196,30 @@ namespace ArcaneWorkshop
             }
             playerWasHere = playerHere;
 
-            if (IsOpen)
+            bool open = IsOpen;
+            if (open != surfacesOpen)
+            {
+                surfacesOpen = open;
+                if (teleportSurfaces != null)
+                {
+                    foreach (Behaviour surface in teleportSurfaces)
+                    {
+                        if (surface != null)
+                        {
+                            surface.enabled = open;
+                        }
+                    }
+                }
+            }
+            // Stars only fall while someone is near enough to see them (and to keep their crashes off Michael Island).
+            if (open && (star != null || PlayerNear()))
             {
                 UpdateStarRain(dt, playerHere);
             }
-            if (!forging)
+            // Only Rune Power above the forging threshold bleeds away, so charging before catching stars is never wasted.
+            if (!forging && runePower > RuneNeeded)
             {
-                runePower = Mathf.Max(0f, runePower - RuneLeakPerSecond * dt);
+                runePower = Mathf.Max(RuneNeeded, runePower - RuneLeakPerSecond * dt);
             }
             forgeHeat = Mathf.MoveTowards(forgeHeat, forging ? 1f : 0f, dt * (forging ? 0.6f : 0.25f));
             if (forging)
@@ -225,6 +251,11 @@ namespace ArcaneWorkshop
             ResolveManager();
             if (manager == null)
             {
+                return;
+            }
+            if (!IsOpen)
+            {
+                Fail("The Astral Foundry is still sealed. Justin's gate awakens when Lucas's first Bloom arrives.", transform.position);
                 return;
             }
             switch (kind)
@@ -525,6 +556,10 @@ namespace ArcaneWorkshop
             {
                 manager.RegisterTeammateOutput(WorkshopResourceKind.AstralCore, 1, "Justin's Astral Foundry");
             }
+            if (manager != null && manager.GetResource(WorkshopResourceKind.ConservatoryBloom) < 1)
+            {
+                manager.SetFeedback("Astral Core delivered to Michael Island. The Convergence Altar also needs 1 more Conservatory Bloom from Lucas.");
+            }
         }
 
         private Vector3 PathPoint(float t)
@@ -553,6 +588,17 @@ namespace ArcaneWorkshop
                 "NEW - Justin's Astral Foundry. You are the star-smith: focus the Star Catcher with Crystal so it catches " +
                 "falling stars, pour Essence into the Rune Well, then strike the Astral Forge. Lucas's Bloom binds the core.",
                 at);
+        }
+
+        private bool PlayerNear()
+        {
+            Camera camera = Camera.main;
+            if (camera == null)
+            {
+                return false;
+            }
+            Vector3 offset = camera.transform.position - transform.position;
+            return new Vector2(offset.x, offset.z).magnitude <= StarRainRange;
         }
 
         private bool PlayerHere()

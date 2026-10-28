@@ -79,6 +79,14 @@ Author: Michael. Justin's branch had no island work, so Michael implemented Just
 - [x] G4 Validator 139/139 (foundry placement, bridge/teleport safety, seal, machines)
 - [x] G5 Play Mode: sealed gate blocks the CharacterController at r 8.8, awakened gate walks to the island; bridge sides and island edge hold; pointer-ray loop forge -> catcher -> well -> forge; core delivered (AstralCore 1); no Console errors
 - [x] G7 Desktop inspect view (no headset): free camera, Tab cycles workshop / farm / foundry / ritual islet, V returns to the player eye; mouse clicks still work through it
+- [x] G8 Self-audit before the headset test:
+  - foundry teleport surfaces stay off until Justin's gate awakens (no teleporting past the seal); machines refuse while sealed
+  - stars only fall when the player is within 30 m (their 60%-spatial crash sounds no longer reach Michael Island)
+  - only Rune Power above 50 leaks, so charging before catching stars is never wasted
+  - forge collider covers furnace to anvil; landing-post colliders; walls close the slivers beside the foundry landing
+  - inspect view never turns on with a headset (mobile platform, XR device, display subsystem or head presence all count)
+  - after a core lands with no Bloom left, the player is told the altar still needs one more Bloom
+  - Keliang's checks updated where Michael's merged work had made them stale (rig-space spellbook, removed teammate stations, foundry teleport surfaces, inspect camera parked): his rig/teleport/bridge checks pass 55/55; his remaining failure "Tilling and planting create linked crop prefabs" is his farm-stage seed lock, untouched here
 - [ ] G6 On-headset check of the foundry (lab)
 
 ▶ STOPPED HERE — pushed `michael/justin-foundry`; user opens the PR. Remaining: F8/G6 on headset, video, contribution summary.
