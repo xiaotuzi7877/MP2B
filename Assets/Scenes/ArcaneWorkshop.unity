@@ -694,7 +694,7 @@ TextMesh:
   m_GameObject: {fileID: 43295265}
   m_Text: 'Tank upgraded: 100 -> 200'
   m_OffsetZ: 0
-  m_CharacterSize: 0.02
+  m_CharacterSize: 0.012
   m_LineSpacing: 1
   m_Anchor: 4
   m_Alignment: 1
@@ -705,7 +705,7 @@ TextMesh:
   m_Font: {fileID: 0}
   m_Color:
     serializedVersion: 2
-    rgba: 4279179809
+    rgba: 4294967295
 --- !u!114 &43295267
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -809,7 +809,7 @@ Transform:
   m_GameObject: {fileID: 44013098}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.06, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2372,8 +2372,8 @@ Transform:
   m_GameObject: {fileID: 102851626}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.012, z: -5.5}
-  m_LocalScale: {x: 2, y: 0.025, z: 4}
+  m_LocalPosition: {x: 0, y: -0.048, z: -5.5}
+  m_LocalScale: {x: 3, y: 0.025, z: 4}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1313210587}
@@ -5457,7 +5457,7 @@ TextMesh:
   m_GameObject: {fileID: 209215456}
   m_Text: 'Tank upgraded: 100 -> 200'
   m_OffsetZ: 0
-  m_CharacterSize: 0.02
+  m_CharacterSize: 0.012
   m_LineSpacing: 1
   m_Anchor: 4
   m_Alignment: 1
@@ -5468,7 +5468,7 @@ TextMesh:
   m_Font: {fileID: 0}
   m_Color:
     serializedVersion: 2
-    rgba: 4279179809
+    rgba: 4294967295
 --- !u!114 &209215458
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10599,7 +10599,7 @@ TextMesh:
   m_GameObject: {fileID: 386403793}
   m_Text: 'Tank upgraded: 100 -> 200'
   m_OffsetZ: 0
-  m_CharacterSize: 0.02
+  m_CharacterSize: 0.012
   m_LineSpacing: 1
   m_Anchor: 4
   m_Alignment: 1
@@ -10610,7 +10610,7 @@ TextMesh:
   m_Font: {fileID: 0}
   m_Color:
     serializedVersion: 2
-    rgba: 4279179809
+    rgba: 4294967295
 --- !u!114 &386403795
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13768,7 +13768,7 @@ Transform:
   m_GameObject: {fileID: 487922612}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.06, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -14908,7 +14908,7 @@ Transform:
   m_GameObject: {fileID: 530390464}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.06, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -27087,7 +27087,7 @@ TextMesh:
   m_GameObject: {fileID: 801495011}
   m_Text: 'Tank upgraded: 100 -> 200'
   m_OffsetZ: 0
-  m_CharacterSize: 0.02
+  m_CharacterSize: 0.012
   m_LineSpacing: 1
   m_Anchor: 4
   m_Alignment: 1
@@ -27098,7 +27098,7 @@ TextMesh:
   m_Font: {fileID: 0}
   m_Color:
     serializedVersion: 2
-    rgba: 4279179809
+    rgba: 4294967295
 --- !u!114 &801495013
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30845,7 +30845,7 @@ Transform:
   m_GameObject: {fileID: 942665752}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.5, y: 1.65, z: 3.7}
+  m_LocalPosition: {x: 3.5, y: 1.59, z: 3.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -33979,7 +33979,7 @@ Transform:
   m_GameObject: {fileID: 1030242344}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.06, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -38439,7 +38439,7 @@ Transform:
   m_GameObject: {fileID: 1204504597}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.06, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -40101,8 +40101,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1280042063}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0.9458732, z: 0, w: -0.3245364}
-  m_LocalPosition: {x: -14.52185, y: 0, z: -18.67095}
+  m_LocalRotation: {x: -0.0001965577867, y: 0.9458730334, z: -0.0005728748536, w: -0.3245363428}
+  m_LocalPosition: {x: -14.52185, y: -0.01775, z: -18.67095}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -40205,7 +40205,7 @@ Transform:
   - {fileID: 8100000019}
   - {fileID: 8100000023}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0.069403199, y: 217.87498, z: 0}
 --- !u!1 &1280130284
 GameObject:
   m_ObjectHideFlags: 0
@@ -49547,7 +49547,7 @@ TextMesh:
   m_GameObject: {fileID: 1447190831}
   m_Text: 'Tank upgraded: 100 -> 200'
   m_OffsetZ: 0
-  m_CharacterSize: 0.02
+  m_CharacterSize: 0.012
   m_LineSpacing: 1
   m_Anchor: 4
   m_Alignment: 1
@@ -49558,7 +49558,7 @@ TextMesh:
   m_Font: {fileID: 0}
   m_Color:
     serializedVersion: 2
-    rgba: 4279179809
+    rgba: 4294967295
 --- !u!114 &1447190833
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -52609,7 +52609,7 @@ TextMesh:
   m_GameObject: {fileID: 1548887571}
   m_Text: 'Tank upgraded: 100 -> 200'
   m_OffsetZ: 0
-  m_CharacterSize: 0.02
+  m_CharacterSize: 0.012
   m_LineSpacing: 1
   m_Anchor: 4
   m_Alignment: 1
@@ -52620,7 +52620,7 @@ TextMesh:
   m_Font: {fileID: 0}
   m_Color:
     serializedVersion: 2
-    rgba: 4279179809
+    rgba: 4294967295
 --- !u!114 &1548887573
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -53918,7 +53918,7 @@ Transform:
   m_GameObject: {fileID: 1610994984}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.06, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -56410,7 +56410,7 @@ Transform:
   m_GameObject: {fileID: 1709133252}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.06, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -57624,7 +57624,7 @@ TextMesh:
   m_GameObject: {fileID: 1767434262}
   m_Text: 'Tank upgraded: 100 -> 200'
   m_OffsetZ: 0
-  m_CharacterSize: 0.02
+  m_CharacterSize: 0.012
   m_LineSpacing: 1
   m_Anchor: 4
   m_Alignment: 1
@@ -57635,7 +57635,7 @@ TextMesh:
   m_Font: {fileID: 0}
   m_Color:
     serializedVersion: 2
-    rgba: 4279179809
+    rgba: 4294967295
 --- !u!114 &1767434264
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -58197,7 +58197,7 @@ TextMesh:
   m_GameObject: {fileID: 1791072761}
   m_Text: 'Tank upgraded: 100 -> 200'
   m_OffsetZ: 0
-  m_CharacterSize: 0.02
+  m_CharacterSize: 0.012
   m_LineSpacing: 1
   m_Anchor: 4
   m_Alignment: 1
@@ -58208,7 +58208,7 @@ TextMesh:
   m_Font: {fileID: 0}
   m_Color:
     serializedVersion: 2
-    rgba: 4279179809
+    rgba: 4294967295
 --- !u!23 &1791072765
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -66713,7 +66713,7 @@ TextMesh:
   m_GameObject: {fileID: 1910526104}
   m_Text: 'Tank upgraded: 100 -> 200'
   m_OffsetZ: 0
-  m_CharacterSize: 0.02
+  m_CharacterSize: 0.012
   m_LineSpacing: 1
   m_Anchor: 4
   m_Alignment: 1
@@ -66724,7 +66724,7 @@ TextMesh:
   m_Font: {fileID: 0}
   m_Color:
     serializedVersion: 2
-    rgba: 4279179809
+    rgba: 4294967295
 --- !u!114 &1910526106
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -69998,7 +69998,7 @@ TextMesh:
   m_GameObject: {fileID: 2029271977}
   m_Text: 'Tank upgraded: 100 -> 200'
   m_OffsetZ: 0
-  m_CharacterSize: 0.02
+  m_CharacterSize: 0.012
   m_LineSpacing: 1
   m_Anchor: 4
   m_Alignment: 1
@@ -70009,7 +70009,7 @@ TextMesh:
   m_Font: {fileID: 0}
   m_Color:
     serializedVersion: 2
-    rgba: 4279179809
+    rgba: 4294967295
 --- !u!114 &2029271979
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -82919,19 +82919,19 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 291626167662404976, guid: 3a4ec84711f47cd4c8441d991e2aa755, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -24.684721
       objectReference: {fileID: 0}
     - target: {fileID: 291626167662404976, guid: 3a4ec84711f47cd4c8441d991e2aa755, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -0.03
       objectReference: {fileID: 0}
     - target: {fileID: 291626167662404976, guid: 3a4ec84711f47cd4c8441d991e2aa755, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -6
+      value: -31.737498
       objectReference: {fileID: 0}
     - target: {fileID: 291626167662404976, guid: 3a4ec84711f47cd4c8441d991e2aa755, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: -0.3245364
       objectReference: {fileID: 0}
     - target: {fileID: 291626167662404976, guid: 3a4ec84711f47cd4c8441d991e2aa755, type: 3}
       propertyPath: m_LocalRotation.x
@@ -82939,7 +82939,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 291626167662404976, guid: 3a4ec84711f47cd4c8441d991e2aa755, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: 0.9458732
       objectReference: {fileID: 0}
     - target: {fileID: 291626167662404976, guid: 3a4ec84711f47cd4c8441d991e2aa755, type: 3}
       propertyPath: m_LocalRotation.z
@@ -82951,7 +82951,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 291626167662404976, guid: 3a4ec84711f47cd4c8441d991e2aa755, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
+      value: 217.87498
       objectReference: {fileID: 0}
     - target: {fileID: 291626167662404976, guid: 3a4ec84711f47cd4c8441d991e2aa755, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
