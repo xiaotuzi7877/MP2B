@@ -11,9 +11,10 @@ namespace ArcaneWorkshop
 
     /// <summary>
     /// Ring portal on Michael Island's rim where a teammate island's bridge docks.
-    /// Sealed: dormant stone ring and a solid barrier. Awakened (progression): the ring and veil glow,
-    /// the bridge trade route opens, but the safety barrier stays until a teammate island is linked.
-    /// Linked: called by the integration scene once the teammate bridge exists; the barrier drops.
+    /// Sealed: a solid barrier you can see — the veil shimmers, motes swirl and the ring spins, so the blocked way
+    /// reads as a force field. Awakened (progression): the field drops and the ring rests in its accent colour,
+    /// so an open gate is a clear, effect-free passage; the bridge trade route opens. Linked: called by the
+    /// integration scene once the teammate bridge exists; the safety barrier drops too.
     /// </summary>
     public sealed class IslandLinkGate : MonoBehaviour
     {
@@ -35,10 +36,10 @@ namespace ArcaneWorkshop
         [SerializeField] private bool bridgeDocked;
         [SerializeField] private Collider sealBarrier;
         [SerializeField] private string awakenTutorial;
+        [SerializeField] private Behaviour[] gatedSurfaces;
 
         private static readonly int ColorId = Shader.PropertyToID("_Color");
         private static readonly int EmissionId = Shader.PropertyToID("_EmissionColor");
-        private static readonly Color DormantColor = new Color(0.26f, 0.3f, 0.42f);
 
         private IslandLinkState state = IslandLinkState.Sealed;
         private MaterialPropertyBlock block;
@@ -55,11 +56,12 @@ namespace ArcaneWorkshop
         /// A real teammate bridge docks at this gate. The optional solid seal blocks the walk until the gate awakens;
         /// the clickable barrier itself is a trigger.
         /// </summary>
-        public void DockBridge(Collider seal, string tutorial)
+        public void DockBridge(Collider seal, string tutorial, Behaviour[] surfaces = null)
         {
             bridgeDocked = true;
             sealBarrier = seal;
             awakenTutorial = tutorial;
+            gatedSurfaces = surfaces;
             ApplyState(true);
         }
 
@@ -94,11 +96,12 @@ namespace ArcaneWorkshop
 
         private void Update()
         {
-            if (spinningRing != null && state != IslandLinkState.Sealed)
+            // The force-field effects play only while the gate is sealed.
+            if (spinningRing != null && state == IslandLinkState.Sealed)
             {
                 spinningRing.Rotate(Vector3.forward, 24f * Time.deltaTime, Space.Self);
             }
-            if (gateLight != null && state != IslandLinkState.Sealed)
+            if (gateLight != null && state == IslandLinkState.Sealed)
             {
                 gateLight.intensity = 2.2f + Mathf.Sin(Time.time * 2.4f) * 0.35f;
             }
@@ -197,7 +200,8 @@ namespace ArcaneWorkshop
             }
             stateApplied = true;
             bool open = state != IslandLinkState.Sealed;
-            Color color = open ? accent : DormantColor;
+            bool field = !open;
+            Color color = accent;
 
             if (block == null)
             {
@@ -213,21 +217,21 @@ namespace ArcaneWorkshop
                     }
                     glowRenderers[i].GetPropertyBlock(block);
                     block.SetColor(ColorId, color);
-                    block.SetColor(EmissionId, open ? accent * 1.6f : DormantColor * 0.15f);
+                    block.SetColor(EmissionId, field ? accent * 1.6f : accent * 0.35f);
                     glowRenderers[i].SetPropertyBlock(block);
                 }
             }
             if (veil != null)
             {
-                veil.SetActive(open);
+                veil.SetActive(field);
             }
             if (swirl != null)
             {
-                if (open && !swirl.isPlaying)
+                if (field && !swirl.isPlaying)
                 {
                     swirl.Play();
                 }
-                else if (!open)
+                else if (!field)
                 {
                     swirl.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
                 }
@@ -235,15 +239,15 @@ namespace ArcaneWorkshop
             if (gateLight != null)
             {
                 gateLight.color = color;
-                gateLight.intensity = open ? 2.2f : 0.5f;
+                gateLight.intensity = field ? 2.2f : 0.6f;
             }
             if (hum != null)
             {
-                if (open && !hum.isPlaying && Application.isPlaying)
+                if (field && !hum.isPlaying && Application.isPlaying)
                 {
                     hum.Play();
                 }
-                else if (!open)
+                else if (!field)
                 {
                     hum.Stop();
                 }
@@ -254,7 +258,21 @@ namespace ArcaneWorkshop
             }
             if (sealBarrier != null)
             {
-                sealBarrier.enabled = state == IslandLinkState.Sealed;
+                foreach (Collider part in sealBarrier.GetComponentsInChildren<Collider>(true))
+                {
+                    part.enabled = state == IslandLinkState.Sealed;
+                }
+            }
+            // Teleport surfaces beyond the gate (its bridge deck) open with the gate, so the seal cannot be skipped.
+            if (gatedSurfaces != null)
+            {
+                foreach (Behaviour surface in gatedSurfaces)
+                {
+                    if (surface != null)
+                    {
+                        surface.enabled = open;
+                    }
+                }
             }
             if (label != null)
             {

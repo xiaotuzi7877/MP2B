@@ -1,7 +1,8 @@
 using System;
+using ArcaneWorkshop;
 using UnityEngine;
 
-public class FarmProgression : MonoBehaviour
+public class FarmProgression : MonoBehaviour, IIslandGuide
 {
     [SerializeField] private FarmResources resources;
     [SerializeField] private GameObject moonSeeds;
@@ -56,6 +57,37 @@ public class FarmProgression : MonoBehaviour
     {
         ApplyVisibility();
         RefreshGoal();
+    }
+
+    private void OnEnable() => IslandGuides.Register(this);
+    private void OnDisable() => IslandGuides.Unregister(this);
+
+    // Spellbook guide (Michael): the same next step as the lesson board, always in the player's left hand.
+    public bool Contains(Vector3 position)
+    {
+        Vector3 local = transform.root.InverseTransformPoint(position);
+        return Mathf.Abs(local.x) < 16.5f && Mathf.Abs(local.z) < 16.5f;
+    }
+
+    public string GuideTitle => resources.BloomHarvested
+        ? "LUCAS'S FARM  -  BLOOM DONE"
+        : "LUCAS'S FARM  -  STEP " + Mathf.Min(5, (Revealing ? pendingStage : Stage) + 1) + " / 5";
+
+    public string GuideText()
+    {
+        var text = new System.Text.StringBuilder();
+        text.Append(Revealing ? Wrap(introduction, 42) : "NEXT STEP\n" + Wrap(CurrentGoal, 42));
+        text.Append("\n\nRIGHT HAND\nGRIP near a tool: pick it up, release: drop\nHarrow / seed bag: touch a plot\n")
+            .Append("Watering can: tilt it over a plot\nRipe plant: point at it + GRIP to harvest\n\n");
+        text.Append("FARM  Seeds ").Append(resources.GetAmount(FarmResource.Seeds))
+            .Append("   Coins ").Append(resources.GetAmount(FarmResource.Coins))
+            .Append("   Stones ").Append(resources.GetAmount(FarmResource.Stones))
+            .Append("\nSHARED  Moon Herbs ").Append(resources.Crops)
+            .Append("   Blooms ").Append(resources.SharedBlooms);
+        if (resources.BloomHarvested)
+            text.Append("\n\n").Append(Wrap("Lucas's part is done. Forge 1 Bloom at Justin's foundry (east bridge), " +
+                "keep 1 for the altar at home. Sprinkler lessons are optional.", 42));
+        return text.ToString();
     }
 
     private void Update()
@@ -179,7 +211,7 @@ public class FarmProgression : MonoBehaviour
 
     private void RefreshGoal()
     {
-        string controls = "GRIP: grab / harvest\nTRIGGER while holding can: water\nY: spellbook resources";
+        string controls = "GRIP: grab / harvest\nTilt the watering can to pour\nY: hide / show spellbook";
         if (Revealing)
         {
             CurrentGoal = "A new farming tool is opening...";
@@ -224,11 +256,11 @@ public class FarmProgression : MonoBehaviour
             if (lessonCrop == null || !lessonCrop.IsPlanted)
                 CurrentGoal = "Grab the " + crop + " seed bag and touch an empty tilled plot. Till a new plot if needed.";
             else if (Stage == 1)
-                CurrentGoal = "Water your planted Moon Herb: hold TRIGGER with the can spout over its plot. This unlocks mining.";
+                CurrentGoal = "Water your planted Moon Herb: grab the watering can and tilt it over the plot. This unlocks mining.";
             else if (lessonCrop.Crop.IsMature)
                 CurrentGoal = crop + " is mature! Point at the plant and press GRIP to harvest.";
             else if (lessonCrop.Moisture <= 0)
-                CurrentGoal = "Grab the watering can. Hold TRIGGER with the spout above your " + crop + " plot.";
+                CurrentGoal = "Grab the watering can and tilt it over your " + crop + " plot.";
             else CurrentGoal = "Keep the soil moist and wait for " + crop + " to mature. Growth: " + Mathf.FloorToInt(lessonCrop.Crop.Growth) + "%";
             if (Stage == 2) controls = "While it grows: GRIP the pickaxe,\nswing into rocks and collect stones.\nHarvest Moon Herb to unlock Bloom.";
         }

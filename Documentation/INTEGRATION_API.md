@@ -76,5 +76,12 @@ receiver.Receive(1, "Justin's Astral Foundry"); // -> RegisterTeammateOutput(Ast
 ```
 
 `FoundryStation` components are routed by `ArcaneGameManager.ProcessPointer`; `AstralFoundry.InPointerZone(position)` keeps the
-shared XR rig's workshop pointer active on the foundry island and its bridge. `IslandLinkGate.DockBridge(seal, tutorial)` marks
-Justin's gate as docked: the solid seal blocks the bridge until the gate awakens on the first Bloom.
+shared XR rig's workshop pointer active on the foundry island and its bridge. `IslandLinkGate.DockBridge(seal, tutorial, surfaces)`
+marks a gate as docked (Lucas's and Justin's): the seal and its side wings block the bridge, and the listed teleport surfaces
+refuse landings, until the gate awakens.
+
+## Island guides on the spellbook
+
+An island implements `IIslandGuide` (`Contains(position)`, `GuideTitle`, `GuideText()`) and registers with
+`IslandGuides.Register(this)` in `OnEnable`. While the spellbook is inside it, the book's right page shows that guide instead of
+the build/recipe page. `FarmProgression` (Lucas's farm) and `AstralFoundry` (Justin's foundry) both do this.

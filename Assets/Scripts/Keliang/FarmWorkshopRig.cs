@@ -6,6 +6,7 @@ using UnityEngine.XR;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.XR.Interaction.Toolkit.Interactors.Visuals;
 using UnityEngine.XR.Interaction.Toolkit.Locomotion;
+using UnityEngine.XR.Interaction.Toolkit.Locomotion.Movement;
 using UnityEngine.XR.Interaction.Toolkit.Locomotion.Jump;
 using UnityEngine.XR.Interaction.Toolkit.Locomotion.Teleportation;
 using UnityEngine.XR.Interaction.Toolkit.Locomotion.Turning;
@@ -20,6 +21,9 @@ public sealed class FarmWorkshopRig : MonoBehaviour
     [SerializeField] private Transform leftHand;
     [SerializeField] private Transform rightAim;
     [SerializeField] private GameObject farmHud;
+    // Bridges are long, featureless walks: walk faster on a bridge deck, back to normal pace on every island.
+    [SerializeField] private float bridgeSpeed = 3f;
+    [SerializeField] private float speedRampPerSecond = 2.5f;
     private SpellbookPanel book;
     private Transform bookMount, wand, reticle;
     private LineRenderer laser;
@@ -29,8 +33,11 @@ public sealed class FarmWorkshopRig : MonoBehaviour
     private CurveVisualController[] rightCurves;
     private LocomotionProvider[] blinkProviders;
     private ComfortVignette comfort;
+    private ContinuousMoveProvider mover;
+    private float walkSpeed;
     private bool wasTrigger, wasGrip, wasRepair, wasCancel, wasMenu;
-    private bool armed, wasInWorkshop, bookWanted, usingHeadFallback;
+    private bool armed, usingHeadFallback;
+    private bool bookWanted = true; // the spellbook stays open on the left hand everywhere; Y hides / shows it
     private float teleportCooldown;
     // Left-hand spellbook pose filter (rig space): small tremor is smoothed hard, deliberate moves follow quickly.
     private static readonly Vector3 BookOffset = new Vector3(0f, .11f, .05f);
@@ -65,6 +72,9 @@ public sealed class FarmWorkshopRig : MonoBehaviour
         foreach (var provider in blinkProviders) provider.locomotionStarted += Blink;
         // Comfort: an accidental A press must never launch the player into a 1.25 m jump.
         foreach (var jump in GetComponentsInChildren<JumpProvider>(true)) jump.enabled = false;
+        mover = GetComponentInChildren<ContinuousMoveProvider>(true);
+        if (mover != null) walkSpeed = mover.moveSpeed;
+        VrPerformance.Apply();
         priorPosition = transform.position;
         yield return null;
         bookMount = new GameObject("workshopSpellbookMount").transform;
@@ -90,20 +100,28 @@ public sealed class FarmWorkshopRig : MonoBehaviour
         float speed = Vector3.ProjectOnPlane(transform.position - priorPosition, Vector3.up).magnitude / Mathf.Max(Time.deltaTime, .001f);
         comfort.SetMotion(speed > 5f ? 0f : Mathf.Clamp01(speed / 1.3f));
         priorPosition = transform.position;
+        if (mover != null)
+            mover.moveSpeed = Mathf.MoveTowards(mover.moveSpeed, OnBridge() ? bridgeSpeed : walkSpeed, speedRampPerSecond * Time.deltaTime);
     }
+
+    // Probe from just above the feet (inside the body capsule, so the ray never hits the player itself).
+    public bool OnBridge() =>
+        Physics.Raycast(new Vector3(head.position.x, transform.position.y + .3f, head.position.z), Vector3.down,
+            out RaycastHit ground, 1f, ~0, QueryTriggerInteraction.Ignore) &&
+        ground.collider.TryGetComponent(out SharedRigTeleportArea area) && area.region == SharedRigTeleportArea.Region.Bridge;
 
     private void RouteInput(bool rightTracked, bool leftTracked, bool trigger, bool grip, bool repair, bool cancel, bool menu)
     {
         bool inWorkshop = new Vector2(head.position.x, head.position.z).magnitude < 12f;
-        if (inWorkshop != wasInWorkshop) bookWanted = inWorkshop;
-        wasInWorkshop = inWorkshop;
         bool teleporting = teleportRays.Any(r => r.isActiveAndEnabled);
         if (teleporting) teleportCooldown = Time.unscaledTime + .15f;
         bool teleportBusy = teleporting || Time.unscaledTime < teleportCooldown;
         bool leftBusy = Busy(leftInteractors);
         bool rightBusy = Busy(rightInteractors);
-        if (menu && !wasMenu && leftTracked && !leftBusy && !teleportBusy) bookWanted = !bookWanted;
-        bool showBook = bookWanted && rightTracked && !leftBusy && !teleportBusy;
+        if (menu && !wasMenu && leftTracked && !teleportBusy) bookWanted = !bookWanted;
+        // Hovering a tool with the left hand no longer hides the book; only actually holding something does.
+        bool leftHolding = leftInteractors != null && leftInteractors.Any(i => i.isActiveAndEnabled && i.hasSelection);
+        bool showBook = bookWanted && rightTracked && !leftHolding && !teleportBusy;
         bool bookWasShown = book.gameObject.activeSelf;
         book.gameObject.SetActive(showBook);
         if (showBook && !bookWasShown && leftTracked && !usingHeadFallback) AttachBookToHand(); // no glide from a stale pose

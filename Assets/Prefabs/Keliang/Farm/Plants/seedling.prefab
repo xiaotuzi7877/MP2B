@@ -1335,7 +1335,7 @@ MonoBehaviour:
   mediumStage: {fileID: 4384412855131364968}
   matureStage: {fileID: 7278403024007993424}
   fertilizerMarker: {fileID: 6850663765790563133}
-  growthRate: 3.3333333
+  growthRate: 8.333333
   growth: 0
   fertilizerBoost: 31
 --- !u!114 &247674300057222879
@@ -1360,7 +1360,7 @@ MonoBehaviour:
   - {fileID: 3658796964986306187}
   - {fileID: 7476203039307464630}
   - {fileID: 613307780220930148}
-  droughtGrace: 10
+  droughtGrace: 60
   droughtDamageRate: 5
   recoveryRate: 10
   wiltedColor: {r: 0.85, g: 0.65, b: 0.08, a: 1}

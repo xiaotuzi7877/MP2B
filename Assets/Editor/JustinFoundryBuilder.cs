@@ -19,14 +19,17 @@ public static class JustinFoundryBuilder
     private const string RootName = "Justin Astral Foundry";
     private const string BridgeName = "mainToFoundryBridge";
 
-    // Mirror of keliangFarmIsland (-28, 0, -36) / mainToFarmBridge (yaw 217.9, deck 29.31 m) across x = 0.
-    public static readonly Vector3 IslandCenter = new Vector3(28f, 0f, -36f);
-    public const float IslandYaw = 142.1f;
+    // Mirror of keliangFarmIsland / mainToFarmBridge across x = 0 (IslandLayoutBuilder places both 5 m closer to home).
+    public static readonly Vector3 IslandCenter = IslandLayoutBuilder.FoundryCenter;
+    public static readonly float IslandYaw = Mathf.Atan2(IslandCenter.x, IslandCenter.z) * Mathf.Rad2Deg;
     public const float IslandRadius = 8f;
     private const float FloorTop = 0f;
-    private const float BridgeLength = 29.31f;
-    private const float BridgeWidth = 3f;
-    private static readonly Vector3 BridgeCenter = new Vector3(14.52f, 0f, -18.67f);
+    internal const float BridgeWidth = 3f;
+    // Like Keliang's bridge: from the gate (9 m out) to 7.3 m from the island centre, just inside the rim.
+    internal const float BridgeEndInset = 7.3f;
+    private static readonly Vector3 BridgeStart = IslandCenter.normalized * MichaelIslandBuilder.GateRadius;
+    private static readonly Vector3 BridgeEnd = IslandCenter - IslandCenter.normalized * BridgeEndInset;
+    private static readonly float BridgeLength = Vector3.Distance(BridgeStart, BridgeEnd);
 
     [MenuItem("MP2B/Build Justin Foundry Island")]
     public static void Build()
@@ -147,6 +150,7 @@ public static class JustinFoundryBuilder
         {
             station.Configure(station.Kind, foundry, station.Label);
         }
+        IslandLayoutBuilder.LinkFarmAndFoundry(m);
         Debug.Log("Justin's Astral Foundry built: island, bridge, Star Catcher, Rune Well, Astral Forge; Justin's gate docked.");
     }
 
@@ -202,9 +206,9 @@ public static class JustinFoundryBuilder
             float angle = i * step;
             Vector3 radial = new Vector3(Mathf.Sin(angle), 0f, Mathf.Cos(angle));
             float yaw = angle * Mathf.Rad2Deg;
-            if (Mathf.Abs(Mathf.DeltaAngle(yaw, 180f)) < 14f)
+            if (Mathf.Abs(Mathf.DeltaAngle(yaw, 180f)) < 14f || Mathf.Abs(Mathf.DeltaAngle(yaw, LinkLandingYaw)) < 14f)
             {
-                continue; // bridge landing at local -Z
+                continue; // bridge landings: Michael Island's bridge at local -Z, the farm link on the west flank
             }
             Vector3 position = radial * rimRadius;
             Vector3 tangent = new Vector3(radial.z, 0f, -radial.x);
@@ -235,14 +239,29 @@ public static class JustinFoundryBuilder
             BoxCollider box = wall.AddComponent<BoxCollider>();
             box.size = new Vector3(panelScale + 0.25f, 3f, 0.18f);
         }
-        // Close the slivers between the bridge rails and the first rim walls beside the landing.
-        for (int side = -1; side <= 1; side += 2)
+        // Close the slivers between the bridge rails and the first rim walls beside each landing.
+        foreach (float landing in new[] { 180f, LinkLandingYaw })
         {
-            GameObject corner = new GameObject("landingCornerBarrier" + (side < 0 ? "L" : "R"));
-            corner.transform.SetParent(boundary.transform, false);
-            corner.transform.localPosition = new Vector3(side * 1.95f, 1.5f, -7.55f);
-            corner.layer = 2;
-            corner.AddComponent<BoxCollider>().size = new Vector3(0.95f, 3f, 0.6f);
+            Quaternion turn = Quaternion.Euler(0f, landing - 180f, 0f);
+            for (int side = -1; side <= 1; side += 2)
+            {
+                GameObject corner = new GameObject((landing == 180f ? "landingCornerBarrier" : "linkCornerBarrier") + (side < 0 ? "L" : "R"));
+                corner.transform.SetParent(boundary.transform, false);
+                corner.transform.localPosition = turn * new Vector3(side * 1.95f, 1.5f, -7.55f);
+                corner.transform.localRotation = turn;
+                corner.layer = 2;
+                corner.AddComponent<BoxCollider>().size = new Vector3(0.95f, 3f, 0.6f);
+            }
+        }
+    }
+
+    /// <summary>Local yaw (around the foundry centre) where the farm link bridge lands.</summary>
+    internal static float LinkLandingYaw
+    {
+        get
+        {
+            Vector3 local = Quaternion.Inverse(Quaternion.Euler(0f, IslandYaw, 0f)) * (IslandLayoutBuilder.LinkFoundryEnd - IslandCenter);
+            return Mathf.Atan2(local.x, local.z) * Mathf.Rad2Deg;
         }
     }
 
@@ -250,79 +269,14 @@ public static class JustinFoundryBuilder
 
     private static GameObject CreateBridge(MichaelIslandBuilder.Materials m, out Transform nearEnd, out Transform farEnd)
     {
-        GameObject bridge = new GameObject(BridgeName);
-        bridge.transform.position = BridgeCenter;
-        bridge.transform.rotation = Quaternion.Euler(0f, IslandYaw, 0f);
+        GameObject bridge = CreateStoneBridge(BridgeName, BridgeStart, BridgeEnd, m, m.justinGlow, m.justinGlow,
+            MichaelIslandBuilder.JustinColor, MichaelIslandBuilder.JustinColor, out nearEnd, out farEnd);
         Transform b = bridge.transform;
-        float half = BridgeLength * 0.5f;
-
-        GameObject deck = MichaelIslandBuilder.CreatePrimitive("walkableDeck", PrimitiveType.Cube, b, new Vector3(0f, -0.12f, 0f),
-            new Vector3(BridgeWidth, 0.24f, BridgeLength), m.rimStone);
-        Material inlay = m.justinGlow;
-        int slabs = 24;
-        for (int i = 0; i < slabs; i++)
-        {
-            float z = -half + (i + 0.5f) * BridgeLength / slabs;
-            GameObject slab = MichaelIslandBuilder.CreatePrimitive("Paving Slab " + i, PrimitiveType.Cube, b, new Vector3(0f, 0.005f, z),
-                new Vector3(BridgeWidth - 0.35f, 0.02f, BridgeLength / slabs - 0.08f), m.paving);
-            Object.DestroyImmediate(slab.GetComponent<Collider>());
-            if (i % 3 == 1)
-            {
-                GameObject rune = MichaelIslandBuilder.CreatePrimitive("Bridge Rune " + i, PrimitiveType.Cube, b, new Vector3(0f, 0.02f, z),
-                    new Vector3(0.5f, 0.012f, 0.12f), inlay);
-                Object.DestroyImmediate(rune.GetComponent<Collider>());
-            }
-        }
-        // Keel under the deck and stone corbels so the span reads as masonry, not a plank.
-        GameObject keel = MichaelIslandBuilder.CreatePrimitive("Bridge Keel", PrimitiveType.Cube, b, new Vector3(0f, -0.55f, 0f),
-            new Vector3(1.4f, 0.7f, BridgeLength - 1f), m.rock);
-        Object.DestroyImmediate(keel.GetComponent<Collider>());
-
-        for (int side = -1; side <= 1; side += 2)
-        {
-            float x = side * (BridgeWidth * 0.5f - 0.08f);
-            GameObject rail = MichaelIslandBuilder.CreatePrimitive((side < 0 ? "left" : "right") + "Handrail", PrimitiveType.Cube, b,
-                new Vector3(x, 1.08f, 0f), new Vector3(0.14f, 0.1f, BridgeLength - 0.6f), m.gold);
-            Object.DestroyImmediate(rail.GetComponent<Collider>());
-            GameObject low = MichaelIslandBuilder.CreatePrimitive((side < 0 ? "left" : "right") + "LowerRail", PrimitiveType.Cube, b,
-                new Vector3(x, 0.42f, 0f), new Vector3(0.1f, 0.08f, BridgeLength - 0.6f), m.rimStone);
-            Object.DestroyImmediate(low.GetComponent<Collider>());
-            for (int k = 0; k <= 12; k++)
-            {
-                float z = -half + 0.5f + k * (BridgeLength - 1f) / 12f;
-                GameObject post = MichaelIslandBuilder.CreatePrimitive("Post " + side + "-" + k, PrimitiveType.Cube, b,
-                    new Vector3(x, 0.55f, z), new Vector3(0.2f, 1.1f, 0.2f), m.rimStone);
-                Object.DestroyImmediate(post.GetComponent<Collider>());
-                if (k % 3 == 0)
-                {
-                    GameObject gem = MichaelIslandBuilder.CreateMeshObject("Post Gem " + side + "-" + k, MichaelIslandBuilder.CrystalMesh(), b,
-                        new Vector3(x, 1.28f, z), Vector3.zero, new Vector3(0.12f, 0.12f, 0.12f), inlay);
-                    gem.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
-                }
-            }
-            GameObject barrier = new GameObject((side < 0 ? "left" : "right") + "SafetyBarrier");
-            barrier.transform.SetParent(b, false);
-            barrier.transform.localPosition = new Vector3(side * BridgeWidth * 0.5f, 0.75f, 0.3f);
-            barrier.layer = 2;
-            barrier.AddComponent<BoxCollider>().size = new Vector3(0.15f, 1.5f, BridgeLength - 0.6f);
-        }
-        for (int i = 0; i < 3; i++)
-        {
-            float z = -half + 4f + i * (BridgeLength - 8f) / 2f;
-            MichaelIslandBuilder.CreatePointLight("Bridge Glow " + i, b, new Vector3(0f, 1.6f, z), MichaelIslandBuilder.JustinColor, 0.9f, 5f);
-        }
 
         // Short side walls where the bridge meets Michael Island's rim gap (mirror of Keliang's gate barriers).
         AddGateBarrier("leftGateSafetyBarrier", new Vector3(4.51f, 0.75f, -8.85f), 102.3f);
         AddGateBarrier("rightGateSafetyBarrier", new Vector3(7.47f, 0.75f, -6.55f), 181.9f);
-
-        nearEnd = new GameObject("Bridge Near End").transform;
-        nearEnd.SetParent(b, false);
-        nearEnd.localPosition = new Vector3(0f, 0f, -half);
-        farEnd = new GameObject("Bridge Far End").transform;
-        farEnd.SetParent(b, false);
-        farEnd.localPosition = new Vector3(0f, 0f, half);
-        return deck;
+        return b.Find("walkableDeck").gameObject;
 
         void AddGateBarrier(string name, Vector3 position, float yaw)
         {
@@ -332,6 +286,89 @@ public static class JustinFoundryBuilder
             wall.layer = 2;
             wall.AddComponent<BoxCollider>().size = new Vector3(0.15f, 1.5f, 1.17f);
         }
+    }
+
+    /// <summary>
+    /// A masonry bridge from <paramref name="start"/> to <paramref name="end"/>: walkable deck, paving slabs with rune
+    /// inlays (start half / end half colours), keel, handrails with gem posts, glow lights and two invisible safety
+    /// barriers on Ignore Raycast. Used for Justin's bridge and the farm-to-foundry link.
+    /// </summary>
+    internal static GameObject CreateStoneBridge(string name, Vector3 start, Vector3 end, MichaelIslandBuilder.Materials m,
+        Material startInlay, Material endInlay, Color startGlow, Color endGlow, out Transform nearEnd, out Transform farEnd)
+    {
+        float length = Vector3.Distance(start, end);
+        Vector3 direction = end - start;
+        direction.y = 0f;
+        GameObject bridge = new GameObject(name);
+        bridge.transform.position = (start + end) * 0.5f;
+        bridge.transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+        Transform b = bridge.transform;
+        float half = length * 0.5f;
+
+        MichaelIslandBuilder.CreatePrimitive("walkableDeck", PrimitiveType.Cube, b, new Vector3(0f, -0.12f, 0f),
+            new Vector3(BridgeWidth, 0.24f, length), m.rimStone);
+        int slabs = Mathf.Max(6, Mathf.RoundToInt(length / 1.22f));
+        for (int i = 0; i < slabs; i++)
+        {
+            float z = -half + (i + 0.5f) * length / slabs;
+            GameObject slab = MichaelIslandBuilder.CreatePrimitive("Paving Slab " + i, PrimitiveType.Cube, b, new Vector3(0f, 0.005f, z),
+                new Vector3(BridgeWidth - 0.35f, 0.02f, length / slabs - 0.08f), m.paving);
+            Object.DestroyImmediate(slab.GetComponent<Collider>());
+            if (i % 3 == 1)
+            {
+                GameObject rune = MichaelIslandBuilder.CreatePrimitive("Bridge Rune " + i, PrimitiveType.Cube, b, new Vector3(0f, 0.02f, z),
+                    new Vector3(0.5f, 0.012f, 0.12f), z < 0f ? startInlay : endInlay);
+                Object.DestroyImmediate(rune.GetComponent<Collider>());
+            }
+        }
+        // Keel under the deck and stone corbels so the span reads as masonry, not a plank.
+        GameObject keel = MichaelIslandBuilder.CreatePrimitive("Bridge Keel", PrimitiveType.Cube, b, new Vector3(0f, -0.55f, 0f),
+            new Vector3(1.4f, 0.7f, length - 1f), m.rock);
+        Object.DestroyImmediate(keel.GetComponent<Collider>());
+
+        int posts = Mathf.Max(4, Mathf.RoundToInt(length / 2.4f));
+        for (int side = -1; side <= 1; side += 2)
+        {
+            float x = side * (BridgeWidth * 0.5f - 0.08f);
+            GameObject rail = MichaelIslandBuilder.CreatePrimitive((side < 0 ? "left" : "right") + "Handrail", PrimitiveType.Cube, b,
+                new Vector3(x, 1.08f, 0f), new Vector3(0.14f, 0.1f, length - 0.6f), m.gold);
+            Object.DestroyImmediate(rail.GetComponent<Collider>());
+            GameObject low = MichaelIslandBuilder.CreatePrimitive((side < 0 ? "left" : "right") + "LowerRail", PrimitiveType.Cube, b,
+                new Vector3(x, 0.42f, 0f), new Vector3(0.1f, 0.08f, length - 0.6f), m.rimStone);
+            Object.DestroyImmediate(low.GetComponent<Collider>());
+            for (int k = 0; k <= posts; k++)
+            {
+                float z = -half + 0.5f + k * (length - 1f) / posts;
+                GameObject post = MichaelIslandBuilder.CreatePrimitive("Post " + side + "-" + k, PrimitiveType.Cube, b,
+                    new Vector3(x, 0.55f, z), new Vector3(0.2f, 1.1f, 0.2f), m.rimStone);
+                Object.DestroyImmediate(post.GetComponent<Collider>());
+                if (k % 3 == 0)
+                {
+                    GameObject gem = MichaelIslandBuilder.CreateMeshObject("Post Gem " + side + "-" + k, MichaelIslandBuilder.CrystalMesh(), b,
+                        new Vector3(x, 1.28f, z), Vector3.zero, new Vector3(0.12f, 0.12f, 0.12f), z < 0f ? startInlay : endInlay);
+                    gem.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
+                }
+            }
+            GameObject barrier = new GameObject((side < 0 ? "left" : "right") + "SafetyBarrier");
+            barrier.transform.SetParent(b, false);
+            barrier.transform.localPosition = new Vector3(side * BridgeWidth * 0.5f, 0.75f, 0.3f);
+            barrier.layer = 2;
+            barrier.AddComponent<BoxCollider>().size = new Vector3(0.15f, 1.5f, length - 0.6f);
+        }
+        int lights = length > 26f ? 3 : 2;
+        for (int i = 0; i < lights; i++)
+        {
+            float z = -half + 4f + i * (length - 8f) / (lights - 1);
+            MichaelIslandBuilder.CreatePointLight("Bridge Glow " + i, b, new Vector3(0f, 1.6f, z), z < 0f ? startGlow : endGlow, 0.9f, 5f);
+        }
+
+        nearEnd = new GameObject("Bridge Near End").transform;
+        nearEnd.SetParent(b, false);
+        nearEnd.localPosition = new Vector3(0f, 0f, -half);
+        farEnd = new GameObject("Bridge Far End").transform;
+        farEnd.SetParent(b, false);
+        farEnd.localPosition = new Vector3(0f, 0f, half);
+        return bridge;
     }
 
     private static void DockGate(IslandLinkGate gate, TeammateDeliveryReceiver receiver)
@@ -358,21 +395,9 @@ public static class JustinFoundryBuilder
                 break;
             }
         }
-        Transform oldSeal = gate.transform.Find("Justin Gate Seal");
-        if (oldSeal != null)
-        {
-            Object.DestroyImmediate(oldSeal.gameObject);
-        }
-        GameObject seal = new GameObject("Justin Gate Seal");
-        seal.transform.SetParent(gate.transform, false);
-        seal.layer = 2;
-        BoxCollider sealBox = seal.AddComponent<BoxCollider>();
-        sealBox.center = barrier.center;
-        sealBox.size = barrier.size;
-        seal.AddComponent<WalkBlocker>();
-        gate.DockBridge(sealBox,
+        MichaelIslandBuilder.SealDockedGate(gate,
             "NEW - Justin's bridge is open. Walk or teleport across the south-east bridge to the Astral Foundry, " +
-            "where falling stars are forged into the Astral Core the Convergence needs.");
+            "where falling stars are forged into the Astral Core the Convergence needs.", null);
 
         // Michael Island's invisible edge wall must open where the bridge lands (Lucas's side already has its gap).
         GameObject boundary = GameObject.Find("workshopBoundary");
@@ -689,7 +714,7 @@ public static class JustinFoundryBuilder
     }
 
     // Same settings as KeliangRigSetup.AddArea, so all teleport surfaces behave alike.
-    private static SharedRigTeleportArea AddArea(GameObject target, SharedRigTeleportArea.Region region, Transform space, Vector2 halfExtents,
+    internal static SharedRigTeleportArea AddArea(GameObject target, SharedRigTeleportArea.Region region, Transform space, Vector2 halfExtents,
         TeleportationProvider provider)
     {
         SharedRigTeleportArea area = target.AddComponent<SharedRigTeleportArea>();

@@ -106,6 +106,10 @@ public sealed class KeliangFarmPlayProbe : MonoBehaviour
         var cells = FindObjectsByType<FarmCell>(FindObjectsSortMode.None).OrderBy(c => c.name).ToArray();
         Check(cells.Length == 9, "Nine original plots retained");
         var cell = cells[0];
+        // Crop mechanics only: open every farm stage first (the stage order itself is covered by Check Farm Lessons).
+        var progress = inventory.Progression;
+        typeof(FarmProgression).GetProperty("Stage").SetValue(progress, 5);
+        typeof(FarmProgression).GetMethod("ApplyVisibility", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(progress, null);
         int seeds = inventory.GetAmount(FarmResource.Seeds);
         Check(cell.Till() && cell.Plant(), "Tilling and planting create linked crop prefabs");
         Check(inventory.GetAmount(FarmResource.Seeds) == seeds - 1, "Planting consumes exactly one seed");
@@ -144,7 +148,8 @@ public sealed class KeliangFarmPlayProbe : MonoBehaviour
         cell.Water(-50f);
         yield return new WaitForSeconds(1f);
         Check(irrigatorCell.Irrigator.Water < before, "Sprinkler neighbor references survive island relocation");
-        Check(FindObjectsByType<TeamExpansionStation>(FindObjectsSortMode.None).Length == 3, "Existing team stations still run");
+        // Michael's rebuilt main island keeps one team station (the Convergence Altar); the foundry has its own machines.
+        Check(FindObjectsByType<TeamExpansionStation>(FindObjectsSortMode.None).Length == 1, "Existing team stations still run");
     }
 
     private void CheckBridge()

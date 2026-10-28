@@ -142,7 +142,7 @@ public class FarmCell : MonoBehaviour
             return false;
         }
         soil.Upgrade();
-        feedback.Success("Soil upgraded: drying 2 -> 1 / sec");
+        feedback.Success("Soil upgraded: it dries half as fast");
         return true;
     }
 

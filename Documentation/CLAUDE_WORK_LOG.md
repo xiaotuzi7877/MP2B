@@ -89,4 +89,17 @@ Author: Michael. Justin's branch had no island work, so Michael implemented Just
   - Keliang's checks updated where Michael's merged work had made them stale (rig-space spellbook, removed teammate stations, foundry teleport surfaces, inspect camera parked): his rig/teleport/bridge checks pass 55/55; his remaining failure "Tilling and planting create linked crop prefabs" is his farm-stage seed lock, untouched here
 - [ ] G6 On-headset check of the foundry (lab)
 
-▶ STOPPED HERE — pushed `michael/justin-foundry`; user opens the PR. Remaining: F8/G6 on headset, video, contribution summary.
+## H. Comfort playtest fixes (2026-10-28, branch `michael/farm-comfort` from main 4cd854c incl. Keliang's PR #9)
+Author: Michael. From the headset playtest of the merged three-island build.
+- [x] H1 Turning: Lucas's 60°/s continuous turn made the player sick -> 30° snap turn with the comfort blink (scene + `KeliangRigSetup` + his check)
+- [x] H2 Bridges: walking ramps 1.3 -> 3 m/s on any bridge deck and back on the islands (`FarmWorkshopRig.OnBridge`, feet probe)
+- [x] H3 Frame rate: `VrPerformance` with a headset: ≤2 pixel lights, 35 m hard shadows, one cascade, one shadowed sun
+- [x] H4 Spellbook: open on the left hand everywhere, hidden only while the left hand holds something; `IIslandGuide` right page on the farm (next step, controls, stock, "Bloom done") and the foundry (4-step checklist)
+- [x] H5 Watering can: pours when tilted (spout below the body) as well as on TRIGGER; sphere cast, 2.5 m reach, null-safe target; prompt text updated
+- [x] H6 Easier farm, same five lessons: crops 12 s, soil dries 0.5/s, wilt after 60 s, sprinkler 0.5/s, start 10 coins + 5 stones; foundry stars every 5 s
+- [x] H7 Gates: locked = force field + air wall (seal with side wings, both gates) + bridge teleport refused; open = no field, no wall
+- [x] H8 Layout: farm and foundry 40.6 m out (main bridges 29.3 -> 24.3 m), ritual islet z -24 -> -22, `farmToFoundryBridge` (33.8 m) behind the islet; farm west wall opened, trees shifted (`IslandLayoutBuilder`)
+- [x] H9 Checks: Michael 148/148; Keliang farm play 74/74 (his stale "till then plant" step now opens the stages first; team stations = 1), lessons 47/47; Play Mode: walk farm -> link -> foundry and back, rails hold, sealed gates leak-proof (max r 10.4), open gates pass, tilt pours (moisture 100), book guide renders
+- [ ] H10 On-headset check (lab): snap turn feel, bridge speed, book readability, tilt pouring
+
+▶ STOPPED HERE — pushed `michael/farm-comfort`. Remaining: H10/G6/F8 on headset, video, contribution summary.

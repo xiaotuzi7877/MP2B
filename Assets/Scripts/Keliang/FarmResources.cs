@@ -28,6 +28,8 @@ public class FarmResources : MonoBehaviour
     }
 
     public bool CanPlantBloom => workshop != null && !bloomPlanted && !bloomHarvested;
+    public bool BloomHarvested => bloomHarvested;
+    public int SharedBlooms => workshop != null ? workshop.GetResource(WorkshopResourceKind.ConservatoryBloom) : 0;
     public void SetBloomPlanted(bool planted) => bloomPlanted = planted;
 
     public bool HarvestBloom()

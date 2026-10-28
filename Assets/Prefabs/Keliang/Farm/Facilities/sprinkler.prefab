@@ -1159,7 +1159,7 @@ MonoBehaviour:
   water: 0
   capacity: 100
   wateringRate: 6
-  consumptionRate: 2
+  consumptionRate: 0.5
 --- !u!114 &2678974848132696116
 MonoBehaviour:
   m_ObjectHideFlags: 0

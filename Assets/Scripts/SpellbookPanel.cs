@@ -20,6 +20,9 @@ namespace ArcaneWorkshop
         private WorldButton[] buildButtons;
         private WorldButton[] recipeButtons;
         private WorldButton ritualButton;
+        private GameObject[] workshopHeaders;
+        private TextMesh guideTitle;
+        private TextMesh guideText;
         private float refreshTimer;
 
         public static SpellbookPanel Create(ArcaneGameManager manager, Transform anchor, Material pageMaterial, Material buttonMaterial)
@@ -47,7 +50,7 @@ namespace ArcaneWorkshop
                 new Vector3(-1.02f, -1.02f, 0f), new Vector2(1.84f, 0.18f), 0.015f, buttonMaterial,
                 manager.TryPerformFinalRitual);
 
-            AddText("BUILD  (point + trigger)", new Vector3(0.1f, 1.14f, 0f), 0.022f, new Color(0.92f, 0.8f, 1f));
+            TextMesh buildHeader = AddText("BUILD  (point + trigger)", new Vector3(0.1f, 1.14f, 0f), 0.022f, new Color(0.92f, 0.8f, 1f));
             buildButtons = new WorldButton[BuildOrder.Length];
             for (int i = 0; i < BuildOrder.Length; i++)
             {
@@ -57,7 +60,7 @@ namespace ArcaneWorkshop
                     () => manager.SelectBuilding(kind));
             }
 
-            AddText("RECIPE", new Vector3(0.1f, -0.45f, 0f), 0.022f, new Color(0.92f, 0.8f, 1f));
+            TextMesh recipeHeader = AddText("RECIPE", new Vector3(0.1f, -0.45f, 0f), 0.022f, new Color(0.92f, 0.8f, 1f));
             BrewRecipe[] recipes = manager.Recipes;
             recipeButtons = new WorldButton[recipes.Length];
             for (int i = 0; i < recipes.Length; i++)
@@ -67,6 +70,11 @@ namespace ArcaneWorkshop
                     new Vector3(1.02f, -0.64f - i * 0.2f, 0f), new Vector2(1.84f, 0.17f), 0.014f, buttonMaterial,
                     () => manager.SelectRecipe(index));
             }
+
+            // On a teammate island the right page becomes that island's step-by-step guide.
+            workshopHeaders = new[] { buildHeader.gameObject, recipeHeader.gameObject };
+            guideTitle = AddText("", new Vector3(0.1f, 1.14f, 0f), 0.022f, new Color(0.92f, 0.8f, 1f));
+            guideText = AddText("", new Vector3(0.1f, 0.96f, 0f), 0.018f, Color.white);
         }
 
         public void SetTrackingFallback(bool active)
@@ -133,6 +141,26 @@ namespace ArcaneWorkshop
             }
             ritualButton.SetText(manager.FinalRitualLabel());
             ritualButton.SetInteractable(manager.FinalRitualReady);
+
+            IIslandGuide guide = IslandGuides.At(transform.position);
+            bool guiding = guide != null;
+            if (workshopHeaders[0].activeSelf == guiding)
+            {
+                foreach (GameObject header in workshopHeaders)
+                {
+                    header.SetActive(!guiding);
+                }
+                foreach (WorldButton button in buildButtons)
+                {
+                    button.SetVisible(!guiding);
+                }
+                foreach (WorldButton button in recipeButtons)
+                {
+                    button.SetVisible(!guiding);
+                }
+            }
+            guideTitle.text = guiding ? guide.GuideTitle : "";
+            guideText.text = guiding ? guide.GuideText() : "";
         }
     }
 }

@@ -51,6 +51,13 @@ namespace ArcaneWorkshop
             block = new MaterialPropertyBlock();
         }
 
+        /// <summary>The label is a sibling of the tablet; hide both together.</summary>
+        public void SetVisible(bool visible)
+        {
+            gameObject.SetActive(visible);
+            label.gameObject.SetActive(visible);
+        }
+
         public void SetText(string text)
         {
             if (label.text != text)

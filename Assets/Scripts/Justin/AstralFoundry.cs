@@ -13,7 +13,7 @@ namespace ArcaneWorkshop
     ///    which then floats back across the bridge into Justin's receiver on Michael Island.
     /// Only named resources cross into the shared workshop (Crystal, Essence and Bloom in; Astral Core out).
     /// </summary>
-    public sealed class AstralFoundry : MonoBehaviour
+    public sealed class AstralFoundry : MonoBehaviour, IIslandGuide
     {
         public const int FragmentsNeeded = 2;
         public const int MaxFragments = 3;
@@ -21,7 +21,7 @@ namespace ArcaneWorkshop
         public const int MaxCharges = 4;
         public const float RunePerEssence = 50f;
         public const float RuneNeeded = 50f;
-        private const float StarInterval = 8f;
+        private const float StarInterval = 5f;
         private const float StarFallSeconds = 2.4f;
         private const float CrashDrain = 15f;
         private const float RuneLeakPerSecond = 0.15f;
@@ -160,11 +160,79 @@ namespace ArcaneWorkshop
         private void OnEnable()
         {
             Active.Add(this);
+            IslandGuides.Register(this);
         }
 
         private void OnDisable()
         {
             Active.Remove(this);
+            IslandGuides.Unregister(this);
+        }
+
+        // ------------------------------------------------------------------ spellbook guide
+
+        public string GuideTitle
+        {
+            get { return coresForged > 0 ? "JUSTIN'S ASTRAL FOUNDRY  -  CORE FORGED" : "JUSTIN'S ASTRAL FOUNDRY  -  STEP " + GuideStep() + " / 4"; }
+        }
+
+        private int GuideStep()
+        {
+            if (fragments >= FragmentsNeeded)
+            {
+                return runePower >= RuneNeeded ? 4 : 3;
+            }
+            return focusCharges > 0 || fragments > 0 ? 2 : 1;
+        }
+
+        public string GuideText()
+        {
+            string next;
+            if (!IsOpen)
+            {
+                next = "The foundry is sealed until Lucas's first Bloom is harvested. Grow it on the farm first.";
+            }
+            else if (forging || delivering)
+            {
+                next = forging ? "The Forge is hammering your Astral Core..." : "Your Astral Core is floating home to Justin's receiver.";
+            }
+            else if (coresForged > 0)
+            {
+                next = "The Astral Core is home. Walk back and trigger the Convergence Altar with your second Bloom.";
+            }
+            else
+            {
+                switch (GuideStep())
+                {
+                    case 1:
+                        next = "Point at the STAR CATCHER and press TRIGGER: 1 Crystal focuses it for 2 falling stars.";
+                        break;
+                    case 2:
+                        next = "Watch the sky: the focused Star Catcher catches the next falling stars (" + fragments + " / " + FragmentsNeeded + " fragments).";
+                        break;
+                    case 3:
+                        next = "Point at the RUNE WELL and press TRIGGER: 1 Essence gives " + Mathf.RoundToInt(RunePerEssence) + " Rune Power.";
+                        break;
+                    default:
+                        next = ForgeMissing() ?? "Point at the ASTRAL FORGE and press TRIGGER to forge the Astral Core.";
+                        break;
+                }
+            }
+            string carry = manager != null
+                ? "Crystal " + manager.GetResource(WorkshopResourceKind.Crystal) + "   Essence " + manager.GetResource(WorkshopResourceKind.Essence) +
+                  "   Blooms " + manager.GetResource(WorkshopResourceKind.ConservatoryBloom)
+                : "";
+            return "NEXT STEP\n" + ArcaneGameManager.Wrap(next, 42) +
+                "\n\n" + Check(focusCharges > 0 || fragments >= FragmentsNeeded) + "1  Star Catcher focused (charges " + focusCharges + ")" +
+                "\n" + Check(fragments >= FragmentsNeeded) + "2  Star Fragments " + fragments + " / " + FragmentsNeeded +
+                "\n" + Check(runePower >= RuneNeeded) + "3  Rune Power " + Mathf.RoundToInt(runePower) + " / " + Mathf.RoundToInt(RuneNeeded) +
+                "\n" + Check(coresForged > 0) + "4  Forge: fragments + rune + 1 Bloom" +
+                "\n\nRIGHT HAND: point at a machine + TRIGGER\nYOU CARRY  " + carry;
+        }
+
+        private static string Check(bool done)
+        {
+            return done ? "[x] " : "[  ] ";
         }
 
         private void Awake()

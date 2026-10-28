@@ -44,9 +44,8 @@ Merchant Gate, Falling Stars, Integrity/repair, seven restoration goals) and unf
 1. **Goals 1–6 (MP2A loop)** teach foundations, planting, mana links, brewing, selling, and the full production chain.
 2. **Lucas's bridge gate (south-west rim, facing `mainToFarmBridge`)** awakens when goal 6 is complete. Its receiver orders a **Conservatory Bloom**
    (2 Water + 1 Moon Herb + 6 Gold); a crate crosses the gate and lands on the pedestal.
-3. **Justin's bridge gate (south-east rim, mirroring Lucas's)** awakens after the first Bloom arrives; until then a solid seal
-   blocks it. (Justin's part, built by Michael.) Behind it a stone bridge (`mainToFoundryBridge`) leads to **Justin's Astral Foundry**, mirrored from Lucas's farm
-   at (28, 0, -36). The star-smith loop:
+3. **Justin's bridge gate (south-east rim, mirroring Lucas's)** awakens after the first Bloom arrives. (Justin's part, built by Michael.)
+   Behind it a stone bridge (`mainToFoundryBridge`) leads to **Justin's Astral Foundry**, mirrored from Lucas's farm. The star-smith loop:
    - **Star Catcher** — 1 Crystal focuses it for 2 catches; each falling star it catches becomes a Star Fragment. An unfocused
      catcher lets the star crash into the island and drain 15 Rune Power.
    - **Rune Well** — 1 Essence pours in 50 Rune Power, which slowly leaks away; the floor channel to the forge lights up with it.
@@ -55,10 +54,21 @@ Merchant Gate, Falling Stars, Integrity/repair, seven restoration goals) and unf
    Machines use the same click/trigger language as the gates and receivers; the next machine to use is marked `>>`.
 4. With both, the **Convergence Altar** (back wall) brews the Convergence Elixir (goal 7); 100 Gold of sales unlocks the
    **Final Ritual** at the same altar (goal 8).
-5. The **Nexus Core** floats over the unreachable **ritual islet** at the centre of the three islands (0, 3.2, -24) — dormant (blue),
+5. The **Nexus Core** floats over the unreachable **ritual islet** inside the three-island triangle (0, 3.2, -22) — dormant (blue),
    aligned (gold), resonating (white). Once aligned, triggering the Core or the altar begins the Final Ritual.
 6. The **Merchant Gate** sits on the east rim. Every refused or accepted press also shows a short world-space message on the
    line of sight, because in the headset the spellbook feedback line is easy to miss.
+
+**Bridge gates.** A locked gate shows its force field (veil, swirling motes, spinning ring, hum) and an invisible wall with
+side wings blocks the way; its bridge deck also refuses teleports. Once the gate awakens the field and the wall drop together:
+an open gate is a clear passage.
+
+**Three-island layout (comfort playtest).** Lucas's farm and Justin's foundry sit 40.6 m out on the two mirrored diagonals
+(5 m closer than before), so both main bridges are 24.3 m. A third stone bridge, `farmToFoundryBridge`, runs straight east-west
+behind the ritual islet from a gap in the farm's west wall to the foundry's west rim, so all three islands connect.
+`IslandLayoutBuilder` (run by Build Justin Foundry Island / Build Michael Island) places the farm, shortens Keliang's bridge in
+place (planks re-spaced, gate rails kept), opens the farm wall (trees shifted aside, as Keliang did for his entrance) and builds
+the link.
 
 Controls are unchanged from MP2A (mouse/keyboard on desktop, wand ray + spellbook in VR). In Play Mode without a headset an
 **inspect view** replaces the fixed rig eye: middle drag or Alt + left drag looks around, wheel zooms, WASD/QE move, Tab cycles
@@ -66,7 +76,13 @@ workshop / Lucas's farm / Justin's foundry / ritual islet, V switches to the pla
 Nexus answer both click/trigger and right-click/grip, and their labels grow under the pointer.
 Walls, furniture, trees, gates and pedestals are solid in VR: smooth walking slides along them and teleports cannot land inside them.
 Comfort on Quest: the XRI jump is off, the left-hand spellbook follows the hand through a tremor filter, and the Android
-quality level renders without real-time shadow maps (they shimmered with head motion and cost frames).
+quality level renders without real-time shadow maps (they shimmered with head motion and cost frames). With a headset running,
+`VrPerformance` also caps per-pixel lights at 2, shadows at 35 m / one cascade / hard, and keeps one shadowed sun, so the
+PC-Link build holds frame rate (dropped frames cause judder and sickness).
+
+**Spellbook everywhere.** The book is open on the left hand from the start, on every island (Y hides / shows it); only actually
+holding something in the left hand hides it. On Lucas's farm and Justin's foundry its right page becomes that island's guide:
+the next step, the right-hand controls, and the stock you carry, so nobody has to walk to a board.
 
 ### Integration points for teammates (MP2C)
 
@@ -98,9 +114,9 @@ See `Documentation/MP2B_SETUP.md` for ownership, extension points, and the compl
 - XRI owns movement, turning and grabbing across both islands. `FarmWorkshopRig` forwards right trigger/grip/B and left X to the workshop near the main island and uses the shared left-hand spellbook; Y can also open it outside the main island. The old workshop rig is suppressed, so its origin-centered movement clamp cannot pull the player off the bridge. The main island uses a mesh collider matching its visible ground instead of the oversized cylinder capsule collider.
 - The original `mp2aunity` project is unchanged. Moon Herb harvests and farm crop trades use the existing shared MoonHerb balance. The separate purple Bloom seed bag grows Conservatory Bloom; its first harvest grants exactly two shared Blooms. Existing spellbook resource text reflects both harvests.
 
-The shared XR rig uses left-stick walking at 1.3 m/s, right-stick linear continuous turning (up to 60 degrees/second, proportional to horizontal stick input), and the existing right-stick teleport gesture. Snap turning is disabled. Main-island, bridge and farm teleport areas reject edge and occupied destinations. Walking uses the original comfort vignette; teleports trigger its blink. The scene starts the player on the main island at (0, 0, -7.5), facing its center.
+The shared XR rig uses left-stick walking at 1.3 m/s on the islands, ramping smoothly to 3 m/s on any bridge deck and back (bridges are long, featureless walks), right-stick 30-degree snap turning behind a short comfort blink, and the existing right-stick teleport gesture. Continuous turning was tried and made playtesters sick, so it is disabled. Main-island, bridge and farm teleport areas reject edge and occupied destinations. Walking uses the original comfort vignette; teleports trigger its blink. The scene starts the player on the main island at (0, 0, -7.5), facing its center.
 
-Workshop controls: right trigger selects/gathers/builds; right grip uses stations and machines; B repairs or performs a station's alternate action; left X cancels placement. Y toggles the left-hand spellbook, including outside the main island. The book opens on arrival at the workshop, hides while the left hand handles a farm object, and falls back near the view if left-hand tracking is lost. The original building, recipe, resource, goal and ritual UI is reused.
+Workshop controls: right trigger selects/gathers/builds; right grip uses stations and machines; B repairs or performs a station's alternate action; left X cancels placement. Y toggles the left-hand spellbook, which is open everywhere by default. It hides while the left hand holds a farm object, and falls back near the view if left-hand tracking is lost. The original building, recipe, resource, goal and ritual UI is reused.
 
 Farm interaction has priority: a hovered or held XRI object reserves that hand's input; teleport aiming also suppresses workshop actions. Blocked presses are consumed and the right-hand buttons must be released before workshop use resumes. Farm near/far detection includes its visual layer. Safety barriers use Ignore Raycast while remaining solid to the player; station click volumes are triggers, and flattened platform colliders follow their visible meshes.
 
@@ -108,7 +124,9 @@ Checks are available under `MP2B > Keliang`: static integration validation and P
 
 ### Farm quick-start for teammates
 
-Cross `mainToFarmBridge` to Lucas/Keliang's farm. Use GRIP to grab tools, select board buttons, and harvest mature plants; release GRIP to drop a held tool. With the watering can held, hold TRIGGER with its spout above a plot to water it. Left Y opens the shared spellbook.
+Cross `mainToFarmBridge` to Lucas/Keliang's farm. The spellbook on your left hand shows the next step, the controls and your farm stock. Use right GRIP to grab tools, select board buttons, and harvest mature plants; release GRIP to drop a held tool. Tilt the held watering can over a plot to water it, like a real can (TRIGGER also pours); the can never runs dry. Left Y hides / shows the spellbook.
+
+**Pace (comfort playtest).** Crops mature in 12 s (was 30), watered soil stays wet four times longer, crops only wilt after a minute without water, the sprinkler uses a quarter of the water, and the farm starts with 10 coins and 5 stones. The five-stage lesson order is unchanged; once the Bloom is harvested the book says Lucas's part is done and the sprinkler stages are optional.
 
 **Two seed bags:** the teal/green bag with silver details and the label **MOON** plants Moon Herb. The purple bag with gold details and the label **BLOOM** plants Conservatory Bloom. The Moon bag appears after the first tilling; the Bloom bag appears after your first personal Moon Herb harvest. Hold a bag and touch an empty tilled plot to plant. Both use the same seed stock (1 seed per planting). Moon Herbs can be grown repeatedly. In the current session-based implementation, Bloom can be harvested once and gives exactly **2 shared Blooms**; repeat Bloom planting is blocked after that harvest.
 
@@ -121,12 +139,12 @@ Cross `mainToFarmBridge` to Lucas/Keliang's farm. Use GRIP to grab tools, select
 **Recommended play order:**
 
 1. Grab the harrow and touch an untilled plot. This unlocks the teal MOON seed bag.
-2. Plant Moon Herb, then water it. Mining unlocks: grab the pickaxe and strike rocks for stones while the plant grows.
+2. Plant Moon Herb, then water it (tilt the can). Mining unlocks: grab the pickaxe and strike rocks for stones while the plant grows.
 3. Keep the soil moist; point at the mature herb and press GRIP to harvest. This unlocks the purple BLOOM seed bag. Sell extra herbs at FARM MARKET if you need coins.
 4. Plant and water Bloom on an empty tilled plot, then harvest it for 2 Blooms. This unlocks the sprinkler. Buy a sprinkler kit (5 stones + 3 farm coins), grab its carrier and touch an empty tilled plot to install it.
 5. Fill the sprinkler with the watering can and till a neighboring plot without a sprinkler. Let the sprinkler actually water that neighbor; filling its tank alone does not unlock the next stage.
 6. Buy the now-unlocked tank upgrade (4 stones + 4 farm coins). Grab its carrier and touch the sprinkler to increase capacity from 100 to 200.
-7. Open the spellbook with Y to see the shared Moon Herbs and Blooms. Walk to the foundry: 1 Bloom is consumed when forging the Astral Core. Keep the other Bloom for the main island's Convergence Altar. Harvests are already in shared inventory; no physical crop delivery platform is needed.
+7. The spellbook shows the shared Moon Herbs and Blooms. Walk to the foundry over the east `farmToFoundryBridge` (or back home and over Justin's bridge): 1 Bloom is consumed when forging the Astral Core. Keep the other Bloom for the main island's Convergence Altar. Harvests are already in shared inventory; no physical crop delivery platform is needed.
 
 ### Farm lessons and unlocks
 

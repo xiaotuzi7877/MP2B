@@ -10,8 +10,14 @@ public class WateringCanTool : MonoBehaviour
     [SerializeField] private LayerMask soilMask;
     [SerializeField] private float wateringRate = 40f;
     [SerializeField] private float reach = 1.5f;
+    // Pour like a real can (Michael): tipping the spout below the body pours; TRIGGER still works.
+    [SerializeField] private float pourHeight = .05f;
+    private const float MinReach = 2.5f;
 
     private bool triggerHeld;
+
+    public bool Pouring => grabInteractable.isSelected && (triggerHeld || Tilted);
+    private bool Tilted => spout.position.y - transform.position.y < pourHeight;
 
     private void OnEnable()
     {
@@ -35,18 +41,21 @@ public class WateringCanTool : MonoBehaviour
 
     private void Update()
     {
-        waterStream.enabled = grabInteractable.isSelected && triggerHeld;
+        waterStream.enabled = Pouring;
         if (!waterStream.enabled)
             return;
 
-        Vector3 end = spout.position + Vector3.down * reach;
-        if (Physics.Raycast(spout.position, Vector3.down, out var hit, reach, soilMask, QueryTriggerInteraction.Collide))
+        float distance = Mathf.Max(reach, MinReach);
+        Vector3 end = spout.position + Vector3.down * distance;
+        if (Physics.SphereCast(spout.position, .12f, Vector3.down, out var hit, distance, soilMask, QueryTriggerInteraction.Collide))
         {
-            end = hit.point;
-            if (hit.collider.TryGetComponent<Sprinkler>(out var sprinkler))
+            end = spout.position + Vector3.down * hit.distance;
+            var sprinkler = hit.collider.GetComponentInParent<Sprinkler>();
+            var cell = hit.collider.GetComponentInParent<FarmCell>();
+            if (sprinkler != null)
                 sprinkler.AddWater(wateringRate * Time.deltaTime);
-            else
-                hit.collider.GetComponent<FarmCell>().Water(wateringRate * Time.deltaTime);
+            else if (cell != null)
+                cell.Water(wateringRate * Time.deltaTime);
         }
         waterStream.SetPosition(0, spout.position);
         waterStream.SetPosition(1, end);

@@ -336,7 +336,7 @@ MonoBehaviour:
   soilMask:
     serializedVersion: 2
     m_Bits: 256
-  wateringRate: 40
+  wateringRate: 100
   reach: 1.5
 --- !u!114 &2140705951730398598
 MonoBehaviour:
@@ -371,9 +371,11 @@ MonoBehaviour:
   hoverMessage: 'WATERING CAN
 
     Hold GRIP (side) to grab'
-  heldMessage: 'Hold TRIGGER (index) to pour
+  heldMessage: 'Tilt the can to pour
 
-    Aim spout at soil or sprinkler
+    (or hold TRIGGER)
+
+    Spout over soil or sprinkler
     tank
 
     Release GRIP to drop'

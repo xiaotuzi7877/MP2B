@@ -34,8 +34,9 @@ public static class MichaelIslandBuilder
     private const float MerchantYaw = 90f;
     private const float GateGapDegrees = 15f;
 
-    // Ritual islet: the centre of the three-island triangle (Michael 0,0 · Lucas -28,-36 · Justin mirrored 28,-36).
-    private static readonly Vector3 RitualIsletCenter = new Vector3(0f, 3.2f, -24f);
+    // Ritual islet: inside the three-island triangle (Michael 0,0 · Lucas and Justin mirrored, IslandLayoutBuilder),
+    // 2 m north of the old centre so the farm-to-foundry bridge passes behind it with room to spare.
+    internal static readonly Vector3 RitualIsletCenter = new Vector3(0f, 3.2f, -22f);
 
     public static readonly Color LucasColor = new Color(0.32f, 0.95f, 0.45f);
     public static readonly Color JustinColor = new Color(0.78f, 0.42f, 1f);
@@ -84,6 +85,14 @@ public static class MichaelIslandBuilder
             LucasYaw, false, LucasColor, m.lucasGlow, m.lucasVeil, 6, false, WorkshopResourceKind.Gold);
         IslandLinkGate justinGate = CreateLinkGate(root.transform, manager, m, "Justin", "Astral Foundry",
             JustinYaw, false, JustinColor, m.justinGlow, m.justinVeil, 0, true, WorkshopResourceKind.ConservatoryBloom);
+
+        // Locked gate = visible force field + air wall; open gate = clear passage (playtest request). Keliang's bridge deck
+        // only accepts teleports once the gate is open, so the seal cannot be skipped either.
+        GameObject farmDeck = GameObject.Find("mainToFarmBridge/walkableDeck");
+        SealDockedGate(lucasGate,
+            "NEW - Lucas's bridge is open. Walk or teleport across the south-west bridge to the Verdant Conservatory: " +
+            "grow a Moon Herb, then the Bloom. Your spellbook shows every step.",
+            farmDeck != null ? new Behaviour[] { farmDeck.GetComponent<SharedRigTeleportArea>() } : null);
 
         // Each receiver stands just inside its gate, on the outer flank (away from the south view to the ritual islet).
         CreateReceiver(root.transform, manager, m, lucasGate, "Lucas", WorkshopResourceKind.ConservatoryBloom,
@@ -648,6 +657,41 @@ public static class MichaelIslandBuilder
             glows, veil, spinRoot.transform, swirl, light, label, barrier, hum);
         stoneRing.name = owner + " Stone Ring";
         return link;
+    }
+
+    /// <summary>
+    /// A docked gate's walk seal: a solid wall on Ignore Raycast just inside the ring (the clickable barrier stays a
+    /// trigger), enabled only while the gate is sealed. It sits on the island side of the ring so a player standing at
+    /// the bridge's first planks is never inside it.
+    /// </summary>
+    internal static void SealDockedGate(IslandLinkGate gate, string tutorial, Behaviour[] gatedSurfaces)
+    {
+        string name = gate.Owner + " Gate Seal";
+        Transform old = gate.transform.Find(name);
+        if (old != null)
+        {
+            Object.DestroyImmediate(old.gameObject);
+        }
+        GameObject seal = new GameObject(name);
+        seal.transform.SetParent(gate.transform, false);
+        seal.layer = 2;
+        BoxCollider box = seal.AddComponent<BoxCollider>();
+        box.center = new Vector3(0f, 1.9f, -0.25f);
+        box.size = new Vector3(6.4f, 3.9f, 0.3f);
+        seal.AddComponent<WalkBlocker>();
+        // Wings from the seal's ends out past the rim wall, so nobody slips around the seal and onto the bridge.
+        for (int side = -1; side <= 1; side += 2)
+        {
+            GameObject wing = new GameObject(name + (side < 0 ? " Wing L" : " Wing R"));
+            wing.transform.SetParent(seal.transform, false);
+            wing.layer = 2;
+            BoxCollider wingBox = wing.AddComponent<BoxCollider>();
+            wingBox.center = new Vector3(side * 3.2f, 1.9f, 1.05f);
+            wingBox.size = new Vector3(0.3f, 3.9f, 2.9f);
+            wing.AddComponent<WalkBlocker>();
+        }
+        gate.DockBridge(box, tutorial, gatedSurfaces);
+        EditorUtility.SetDirty(gate);
     }
 
     // Plank pier beyond the ring where the teammate's bridge docks (local +Z points into the void).

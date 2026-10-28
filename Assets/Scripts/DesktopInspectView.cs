@@ -71,7 +71,7 @@ namespace ArcaneWorkshop
         }
 
         // Any sign of a running headset keeps the rig's eye camera: never risk a black headset.
-        private static bool HeadsetRunning()
+        public static bool HeadsetRunning()
         {
             if (Application.isMobilePlatform || XRSettings.isDeviceActive)
             {

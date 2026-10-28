@@ -241,11 +241,12 @@ namespace ArcaneWorkshop.Editor
                                                  : !barrier.isTrigger && gates[i].GetComponent<WalkBlocker>() != null),
                     gates[i].Owner + (docked ? "'s gate must let the player walk onto mainToFarmBridge."
                                              : "'s gate needs a solid safety barrier until its bridge exists."), failures);
-                if (gates[i].Owner == "Justin" && docked)
+                if (docked)
                 {
                     Collider seal = gates[i].SealBarrier;
-                    Check(gates[i].BridgeDocked && seal != null && !seal.isTrigger && seal.GetComponent<WalkBlocker>() != null,
-                        "Justin's gate needs a solid seal that blocks the foundry bridge until it awakens.", failures);
+                    Check(gates[i].BridgeDocked && seal != null && !seal.isTrigger && seal.GetComponent<WalkBlocker>() != null &&
+                          seal.gameObject.layer == 2,
+                        gates[i].Owner + "'s gate needs a solid seal that blocks its bridge until it awakens.", failures);
                 }
             }
             Check(gates.Length == 2 && lucasGate && justinGate, "Michael Island needs exactly two bridge gates: Lucas and Justin.", failures);
@@ -337,7 +338,7 @@ namespace ArcaneWorkshop.Editor
                     "Justin's foundry must mirror Lucas's farm across the workshop.", failures);
             }
             Check(foundry.Contains(foundry.transform.position) && foundry.Contains(bridge.transform.position) &&
-                  !foundry.Contains(Vector3.zero) && !foundry.Contains(new Vector3(0f, 0f, -24f)),
+                  !foundry.Contains(Vector3.zero) && !foundry.Contains(new Vector3(0f, 0f, MichaelIslandBuilder.RitualIsletCenter.z)),
                 "The foundry pointer zone must cover the island and bridge but not Michael Island or the ritual islet.", failures);
 
             Transform deck = bridge.transform.Find("walkableDeck");
@@ -387,6 +388,44 @@ namespace ArcaneWorkshop.Editor
             Check(stations.Length == 3 && catcher && well && forge,
                 "The foundry needs exactly three machines: Star Catcher, Rune Well and Astral Forge.", failures);
             Check(foundry.ForgeMissing() != null, "A fresh foundry must not be able to forge.", failures);
+            RunLinkChecks(foundry, failures);
+        }
+
+        // Comfort playtest layout: shorter mirrored bridges and a third bridge so all three islands connect.
+        private static void RunLinkChecks(AstralFoundry foundry, List<string> failures)
+        {
+            GameObject farm = GameObject.Find("keliangFarmIsland");
+            GameObject farmBridge = GameObject.Find("mainToFarmBridge");
+            GameObject foundryBridge = GameObject.Find("mainToFoundryBridge");
+            GameObject link = GameObject.Find(IslandLayoutBuilder.LinkName);
+            Check(farm != null && Vector3.Distance(farm.transform.position, IslandLayoutBuilder.FarmCenter) < 0.05f &&
+                  Vector3.Distance(foundry.transform.position, IslandLayoutBuilder.FoundryCenter) < 0.05f,
+                "Lucas's farm and Justin's foundry must sit " + IslandLayoutBuilder.OuterIslandDistance + " m out, mirrored.", failures);
+            float farmLength = farmBridge != null ? farmBridge.transform.Find("walkableDeck").localScale.z : 0f;
+            float foundryLength = foundryBridge != null ? foundryBridge.transform.Find("walkableDeck").localScale.z : 0f;
+            Check(farmLength > 20f && farmLength < 26f && Mathf.Abs(farmLength - foundryLength) < 0.05f,
+                "Both main bridges must be shortened to the same length (" + farmLength.ToString("F2") + " / " + foundryLength.ToString("F2") + ").", failures);
+            Check(link != null, "The farm-to-foundry bridge is missing.", failures);
+            if (link == null)
+            {
+                return;
+            }
+            Transform deck = link.transform.Find("walkableDeck");
+            SharedRigTeleportArea area = deck != null ? deck.GetComponent<SharedRigTeleportArea>() : null;
+            Check(area != null && area.region == SharedRigTeleportArea.Region.Bridge && !deck.GetComponent<Collider>().isTrigger,
+                "The farm-to-foundry deck must be walkable and a safe teleport surface.", failures);
+            Check(Mathf.Abs(link.transform.forward.x) > 0.999f, "The farm-to-foundry bridge must run straight east-west.", failures);
+            Vector3 islet = MichaelIslandBuilder.RitualIsletCenter;
+            Check(Mathf.Abs(link.transform.position.z - islet.z) > 8.5f, "The farm-to-foundry bridge must pass clear of the ritual islet.", failures);
+            int barriers = 0;
+            foreach (Collider c in link.GetComponentsInChildren<Collider>())
+            {
+                if (c.name.EndsWith("SafetyBarrier") && c.gameObject.layer == 2 && !c.isTrigger) barriers++;
+            }
+            Check(barriers == 2, "The farm-to-foundry bridge needs two side safety barriers on Ignore Raycast.", failures);
+            Transform walls = farm.transform.Find("sceneObjects/boundaryColliders");
+            Check(walls != null && walls.Find("westInvisibleWall") == null && walls.Find("westBoundaryNorth") != null &&
+                  walls.Find("westBoundarySouth") != null, "The farm's west wall must open where the link bridge lands.", failures);
         }
 
         private static void Check(bool condition, string message, List<string> failures)

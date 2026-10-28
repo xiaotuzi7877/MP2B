@@ -13,7 +13,7 @@ public class SoilMoisture : MonoBehaviour
     public void Upgrade()
     {
         IsUpgraded = true;
-        dryingRate = 1f;
+        dryingRate *= .5f;
         upgradedVisual.SetActive(true);
     }
 

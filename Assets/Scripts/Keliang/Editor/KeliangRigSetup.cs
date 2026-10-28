@@ -25,16 +25,17 @@ public static class KeliangRigSetup
         {
             var settings = new SerializedObject(controller);
             settings.FindProperty("m_SmoothMotionEnabled").boolValue = controller.name == "leftController";
-            settings.FindProperty("m_SmoothTurnEnabled").boolValue = controller.name == "rightController";
+            // Comfort (Michael): smooth turning made playtesters sick; snap turns with a blink are the VR comfort default.
+            settings.FindProperty("m_SmoothTurnEnabled").boolValue = false;
             settings.FindProperty("m_NearFarInteractor").objectReferenceValue = controller.GetComponentInChildren<NearFarInteractor>(true);
             settings.FindProperty("m_TeleportInteractor").objectReferenceValue = controller.GetComponentsInChildren<XRRayInteractor>(true).Single(r => r.name == "teleportInteractor");
             settings.ApplyModifiedProperties();
         }
-        foreach (var turn in rig.GetComponentsInChildren<SnapTurnProvider>(true)) turn.enabled = false;
-        foreach (var turn in rig.GetComponentsInChildren<ContinuousTurnProvider>(true))
+        foreach (var turn in rig.GetComponentsInChildren<ContinuousTurnProvider>(true)) turn.enabled = false;
+        foreach (var turn in rig.GetComponentsInChildren<SnapTurnProvider>(true))
         {
-            turn.enabled = turn is LinearTurnProvider;
-            if (turn is LinearTurnProvider) turn.turnSpeed = 60f;
+            turn.enabled = true;
+            turn.turnAmount = 30f;
         }
         foreach (var move in rig.GetComponentsInChildren<ContinuousMoveProvider>(true)) move.moveSpeed = 1.3f;
         foreach (var caster in rig.GetComponentsInChildren<SphereInteractionCaster>(true))
