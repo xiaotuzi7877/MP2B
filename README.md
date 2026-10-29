@@ -8,7 +8,7 @@ The repository begins from the stable, committed MP2A Arcane Workshop build and 
 
 - Michael (Ziyang Li) — central alchemy workshop, shared progression, integration, and Quest build
 - Lucas (Keliang) — Verdant Conservatory farm: cultivation, magic crops, Conservatory Bloom
-- Justin's part — Astral Foundry: star catching, rune power, forging the Astral Core (designed and implemented by Michael on Justin's behalf)
+- Justin's part — Astral Foundry: star catching, rune power, forging the Astral Core (designed and developed by Michael)
 
 ## Required Unity version
 
